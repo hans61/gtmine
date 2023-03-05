@@ -286,8 +286,8 @@ int main()
 
     i = 0; // bomb counter temp
     while(i < numberbomb){
-        x = rand() % (fieldsx-0);
-        y = rand() % (fieldsy-0);
+        x = rand() % (fieldsx);
+        y = rand() % (fieldsy);
         if(field[y][x] != SBOMB){ // field is not a bomb, bomb set
             i++;                  // add bomb
             field[y][x] = SBOMB;  // set marker for bomb
