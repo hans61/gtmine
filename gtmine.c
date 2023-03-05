@@ -44,131 +44,131 @@ static char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,
 
 // print code borrowed from gigatron-lcc/stuff/tst/TSTmemcpyext.c
 typedef struct {
-	char *addr;
-	char x;
-	char y;
+    char *addr;
+    char x;
+    char y;
 } screenpos_t;
 
 void clear_lines(int l1, int l2)
 {
-	int i;
-	for (i=l1; i<l2; i++) {
-		char *row = (char*)(videoTable[i+i]<<8);
-		memset(row, FGBG & 0xff, 160);
-	}
+    int i;
+    for (i=l1; i<l2; i++) {
+        char *row = (char*)(videoTable[i+i]<<8);
+        memset(row, FGBG & 0xff, 160);
+    }
 }
 
 void clear_screen(screenpos_t *pos)
 {
-	int i;
-	for (i=0; i<120; i++) {
-		videoTable[i+i] = 8 + i;
-		videoTable[i+i+1] = 0;
-	}
-	clear_lines(0,120);
-	pos->x = pos->y = 0;
-	pos->addr = (char*)(videoTable[0]<<8);
+    int i;
+    for (i=0; i<120; i++) {
+        videoTable[i+i] = 8 + i;
+        videoTable[i+i+1] = 0;
+    }
+    clear_lines(0,120);
+    pos->x = pos->y = 0;
+    pos->addr = (char*)(videoTable[0]<<8);
 }
 
 void scroll(void)
 {
-	char pages[8];
-	int i;
-	for (i=0; i<8; i++)
-		pages[i] = videoTable[i+i];
-	for (i=0; i<112; i++)
-		videoTable[i+i] = videoTable[i+i+16];
-	for (i=112; i<120; i++)
-		videoTable[i+i] = pages[i-112];
+    char pages[8];
+    int i;
+    for (i=0; i<8; i++)
+        pages[i] = videoTable[i+i];
+    for (i=0; i<112; i++)
+        videoTable[i+i] = videoTable[i+i+16];
+    for (i=112; i<120; i++)
+        videoTable[i+i] = pages[i-112];
 }
 
 void newline(screenpos_t *pos)
 {
-	pos->x = 0;
-	pos->y += 1;
-	if (pos->y >  14) {
-		scroll();
-		clear_lines(112,120);
-		pos->y = 14;
-	}
-	pos->addr = (char*)(videoTable[16*pos->y]<<8);
+    pos->x = 0;
+    pos->y += 1;
+    if (pos->y >  14) {
+        scroll();
+        clear_lines(112,120);
+        pos->y = 14;
+    }
+    pos->addr = (char*)(videoTable[16*pos->y]<<8);
 }
 
 void print_char(screenpos_t *pos, int ch)
 {
-	unsigned int fntp;
-	char *addr;
-	int i;
-	if (ch < 32) {
-		if (ch == '\n') 
-			newline(pos);
-		return;
-	} else if (ch < 82) {
-		fntp = font32up + 5 * (ch - 32);
-	} else if (ch < 132) {
-		fntp = font82up + 5 * (ch - 82);
-	} else {
-		return;
-	}
-	addr = pos->addr;
-	for (i=0; i<5; i++) {
-		SYS_VDrawBits(FGBG, SYS_Lup(fntp), addr);
-		addr += 1;
-		fntp += 1;
-	}
-	pos->x += 1;
-	pos->addr = addr + 1;
-	if (pos->x > 24)
-		newline(pos);
+    unsigned int fntp;
+    char *addr;
+    int i;
+    if (ch < 32) {
+        if (ch == '\n')
+            newline(pos);
+        return;
+    } else if (ch < 82) {
+        fntp = font32up + 5 * (ch - 32);
+    } else if (ch < 132) {
+        fntp = font82up + 5 * (ch - 82);
+    } else {
+        return;
+    }
+    addr = pos->addr;
+    for (i=0; i<5; i++) {
+        SYS_VDrawBits(FGBG, SYS_Lup(fntp), addr);
+        addr += 1;
+        fntp += 1;
+    }
+    pos->x += 1;
+    pos->addr = addr + 1;
+    if (pos->x > 24)
+        newline(pos);
 }
 
 screenpos_t pos;
 
 void print_unsigned(unsigned int n, int radix)
 {
-	static char digit[] = "0123456789abcdef";
-	char buffer[8];
-	char *s = buffer;
-	do {
-		*s++ = digit[n % radix];
-		n = n / radix;
-	} while (n);
-	while (s > buffer)
-		print_char(&pos, *--s);
+    static char digit[] = "0123456789abcdef";
+    char buffer[8];
+    char *s = buffer;
+    do {
+        *s++ = digit[n % radix];
+        n = n / radix;
+    } while (n);
+    while (s > buffer)
+        print_char(&pos, *--s);
 }
 
 void print_int(int n, int radix)
 {
-	if (n < 0) {
-		print_char(&pos, '-');
-		n = -n;
-	}
-	print_unsigned(n, radix);
+    if (n < 0) {
+        print_char(&pos, '-');
+        n = -n;
+    }
+    print_unsigned(n, radix);
 }
 
 int myprintf(const char *fmt, ...)
 {
-	char c;
-	va_list ap;
-	va_start(ap, fmt);
-	while (c = *fmt++) {
-		if (c != '%') {
-			print_char(&pos, c);
-			continue;
-		}
-		if (c = *fmt++) {
-			if (c == 'd')
-				print_int(va_arg(ap, int), 10);
-			else if (c == 'u')
-				print_unsigned(va_arg(ap, unsigned), 10);
-			else if (c == 'x')
-				print_unsigned(va_arg(ap, unsigned), 16);
-			else
-				print_char(&pos, c);
-		}
-	}
-	va_end(ap);
-	return 0;
+    char c;
+    va_list ap;
+    va_start(ap, fmt);
+    while (c = *fmt++) {
+        if (c != '%') {
+            print_char(&pos, c);
+            continue;
+        }
+        if (c = *fmt++) {
+            if (c == 'd')
+                print_int(va_arg(ap, int), 10);
+            else if (c == 'u')
+                print_unsigned(va_arg(ap, unsigned), 10);
+            else if (c == 'x')
+                print_unsigned(va_arg(ap, unsigned), 16);
+            else
+                print_char(&pos, c);
+        }
+    }
+    va_end(ap);
+    return 0;
 }
 // end of print code
 
@@ -206,11 +206,11 @@ void mySpritet(char *addr, char *dest){ // draws sprite with transparency for co
 
 void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy is the x,y position in the playfield
 {
-	char* ptrChar;
-	int sprnum;
-	sprnum = val;
-	ptrChar = (char*)scursor;		
-	switch(sprnum){
+    char* ptrChar;
+    int sprnum;
+    sprnum = val;
+    ptrChar = (char*)scursor;
+    switch(sprnum){
         case SFREE:
             ptrChar = (char*)sfree;
             break;
@@ -253,27 +253,27 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
         case SMARKER:
             ptrChar = (char*)smarker;
             break;
-	}
-	mySprite(ptrChar, (char*)(yy*6+24<<8)+6*xx+2);
+    }
+    mySprite(ptrChar, (char*)(yy*6+24<<8)+6*xx+2);
 }
 
 int main()
 {
-    
+
     unsigned int ticks = _clock();
-    
-    
+
+
     int i,x,y;
     int offset = 0;
     int fieldsx = 26;
     int fieldsy = 17;
     int numberbomb;
     int cx, cy;
-    char field[MAXY][MAXX]; 
+    char field[MAXY][MAXX];
     char *selectspr;
-    
+
     clear_screen(&pos);
-    
+
 
     numberbomb = fieldsx * fieldsy * 15 / 100; // 15% bombs
 
@@ -286,12 +286,12 @@ int main()
 
     i = 0; // bomb counter temp
     while(i < numberbomb){
-        x = rand() % (fieldsx-1);
-        y = rand() % (fieldsy-1);
+        x = rand() % (fieldsx-0);
+        y = rand() % (fieldsy-0);
         if(field[y][x] != SBOMB){ // field is not a bomb, bomb set
             i++;                  // add bomb
             field[y][x] = SBOMB;  // set marker for bomb
-			// increase neighbor fields by one if no bomb
+            // increase neighbor fields by one if no bomb
             if(x < fieldsx+1 ){ // Observe margins
                 if(field[y][x+1] != SBOMB) field[y][x+1]++;                        // right
                 if(y < fieldsy+1 ) if(field[y+1][x+1] != SBOMB) field[y+1][x+1]++; // bottom right
@@ -311,11 +311,11 @@ int main()
 
     cx = 0;
     cy = 0;
-    
+
     mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
 
     while(1){
-        
+
         switch(buttonState) {
             case 0xFB: // down
                 if(cy < fieldsy-1){
@@ -346,7 +346,7 @@ int main()
                 }
             break;
             case 0x20: // space
-				// display for debugging
+                // display for debugging
                 for( y=0; y<fieldsy; y++ ){
                     for( x=0; x<fieldsx; x++ ){
                         printSprite(field[y][x], x, y);
@@ -357,16 +357,16 @@ int main()
             case 0x0A: // enter
             break;
         }
-		
-		// display for debugging
-   		pos.x = 0;
-		pos.y = 0;
-		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-		myprintf("X=%d Y=%d V=%d  ", cx, cy, field[cy][cx]);
-		
+
+        // display for debugging
+        pos.x = 0;
+        pos.y = 0;
+        pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+        myprintf("X=%d Y=%d V=%d  ", cx, cy, field[cy][cx]);
+
         while(serialRaw != 0xFF) {}
     }
-    
+
     return 0;
 
 }
