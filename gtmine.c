@@ -42,27 +42,7 @@ static char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,
 static char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};      // 12
 static char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};          // 13
 
-/*
-void clear_lines(int l1, int l2)
-{
-    int i;
-    for (i=l1; i<l2; i++) {
-        char *row = (char*)(videoTable[i+i]<<8);
-        memset(row, FGBG & 0xff, 160);
-    }
-}
-
-void clear_screen()
-{
-    int i;
-    for (i=0; i<120; i++) {
-        videoTable[i+i] = 8 + i;
-        videoTable[i+i+1] = 0;
-    }
-    clear_lines(0,120);
-}
-*/
-// #############################################################################
+// print code borrowed from gigatron-lcc/stuff/tst/TSTmemcpyext.c
 typedef struct {
 	char *addr;
 	char x;
@@ -190,8 +170,9 @@ int myprintf(const char *fmt, ...)
 	va_end(ap);
 	return 0;
 }
-// #############################################################################
-void mySprite(char *addr, char *dest){
+// end of print code
+
+void mySprite(char *addr, char *dest){ // draws sprite like sys function
     int i,z,v;
     z = 0;
     v = 0;
@@ -207,7 +188,7 @@ void mySprite(char *addr, char *dest){
 
 }
 
-void mySpritet(char *addr, char *dest){
+void mySpritet(char *addr, char *dest){ // draws sprite with transparency for color 0
     int i,z,v;
     z = 0;
     v = 0;
@@ -223,7 +204,7 @@ void mySpritet(char *addr, char *dest){
 
 }
 
-void printSprite(int val, int xx, int yy)
+void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy is the x,y position in the playfield
 {
 	char* ptrChar;
 	int sprnum;
@@ -365,6 +346,7 @@ int main()
                 }
             break;
             case 0x20: // space
+				// display for debugging
                 for( y=0; y<fieldsy; y++ ){
                     for( x=0; x<fieldsx; x++ ){
                         printSprite(field[y][x], x, y);
@@ -376,6 +358,7 @@ int main()
             break;
         }
 		
+		// display for debugging
    		pos.x = 0;
 		pos.y = 0;
 		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
