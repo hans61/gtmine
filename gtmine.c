@@ -8,6 +8,7 @@
 
 #define MAXX 26
 #define MAXY 17
+#define MAXQ 50
 
 #define SFREE 0
 #define S1 1
@@ -19,7 +20,7 @@
 #define S7 7
 #define S8 8
 #define SBOMB 9
-#define SBOMBHIDDEN 10
+#define SBOMBTRIGGERED 10
 #define SCURSOR 11
 #define SHIDDEN 12
 #define SMARKER 13
@@ -36,8 +37,8 @@ static char s5[]={44,6,6,6,6,46,44,6,44,44,44,46,44,44,6,6,44,46,44,44,44,44,6,4
 static char s6[]={44,44,57,57,44,46,44,57,44,44,44,46,44,57,57,57,44,46,44,57,44,44,57,46,44,44,57,57,44,46,46,46,46,46,46,46,250};           // 6
 static char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,44,44,46,44,44,16,44,44,46,46,46,46,46,46,46,250};           // 7
 static char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};           // 8
-static char sbomb[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};        // 9
-static char sbombhidden[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};  // 10 [a]
+static char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};  // 9
+static char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};        // 10 [a]
 // static char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,35,35,35,35,250};                      // 11 [b]
 static char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                      // 11
 static char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};      // 12 [c]
@@ -243,8 +244,8 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
         case SBOMB:
             ptrChar = (char*)sbomb;
             break;
-        case SBOMBHIDDEN:
-            ptrChar = (char*)sbombhidden;
+        case SBOMBTRIGGERED:
+            ptrChar = (char*)sbombtriggered;
             break;
         case SCURSOR:
             ptrChar = (char*)scursor;
@@ -271,7 +272,11 @@ int main()
     int fieldsy = 17;
     int numberbomb;
     int cx, cy;
+    int tx, ty;
+    int x1, y1;
 	int markerCount;
+	int queue[MAXQ];
+	int qptr;
     char field[MAXY][MAXX]; 
     char *selectspr;
     
@@ -382,6 +387,70 @@ int main()
                 }
             break;
             case 0x0A: // enter
+				/*
+				pos.x = 0;
+				pos.y = 1;
+				pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+				myprintf("Field: %d ", field[cy][cx]);
+				*/
+				if(field[cy][cx] < 0x20){              // marker protects field
+					if((field[cy][cx] & 0x0F) == SBOMB){
+						// game over
+						field[cy][cx] = SBOMBTRIGGERED;
+						for( y=0; y<fieldsy; y++ ){   // uncover all hidden fields
+							for( x=0; x<fieldsx; x++ ){
+								printSprite((field[y][x] & 0x0F), x, y);
+							}
+						}
+					}else{ // no bomb in the field
+						if((field[cy][cx] & 0x0F) == SFREE) {
+							qptr = 0;
+							queue[qptr] = (cy<<8) + cx;
+							qptr++;
+							while(qptr>0){
+								qptr--;
+								ty = queue[qptr]>>8;
+								tx = queue[qptr] & 0xFF;
+
+								pos.x = 0;
+								pos.y = 1;
+								pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+								myprintf("tx,ty %d,%d ", tx, ty);
+								while(serialRaw == 0xFF) {}
+								while(serialRaw != 0xFF) {}
+								
+								field[ty][tx] = field[ty][tx] & 0x0F;
+								printSprite(field[ty][tx], tx, ty);
+								for(y = -1; y < 2; y++){
+									for(x = -1; x < 2; x++){
+										x1 = tx + x; y1 = ty + y;
+/*
+											pos.x = 0;
+											pos.y = 1;
+											pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+											myprintf("x1,y1 %d,%d field: %d", x1, y1, field[y1][x1]);
+											while(serialRaw == 0xFF) {}
+											while(serialRaw != 0xFF) {}
+*/								
+										if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
+											field[y1][x1] = field[y1][x1] & 0x0F;
+											printSprite(field[y1][x1], x1, y1);
+											if(field[y1][x1] == SFREE){
+												queue[qptr] = (y1<<8) + x1;
+												qptr++;
+											}
+										}
+									}
+								}
+							}
+						}else{
+							// field has bomb as neighbor, view count
+							field[cy][cx] = field[cy][cx] & 0x0F;
+							printSprite(field[cy][cx], cx, cy);
+						}
+					}
+					mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
+				}
             break;
         }
 		// display for debugging
