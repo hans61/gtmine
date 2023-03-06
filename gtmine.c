@@ -277,6 +277,7 @@ int main()
 	int markerCount;
 	int queue[MAXQ];
 	int qptr;
+	int qmax;
     char field[MAXY][MAXX]; 
     char *selectspr;
     
@@ -285,6 +286,7 @@ int main()
 
     numberbomb = fieldsx * fieldsy * 15 / 100; // 15% bombs
 	markerCount = 0;
+	qmax = 0;
 
     for( y=0; y<fieldsy; y++ ){
         for( x=0; x<fieldsx; x++ ){
@@ -411,14 +413,14 @@ int main()
 								qptr--;
 								ty = queue[qptr]>>8;
 								tx = queue[qptr] & 0xFF;
-
+/*
 								pos.x = 0;
 								pos.y = 1;
 								pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 								myprintf("tx,ty %d,%d ", tx, ty);
 								while(serialRaw == 0xFF) {}
 								while(serialRaw != 0xFF) {}
-								
+*/								
 								field[ty][tx] = field[ty][tx] & 0x0F;
 								printSprite(field[ty][tx], tx, ty);
 								for(y = -1; y < 2; y++){
@@ -438,11 +440,17 @@ int main()
 											if(field[y1][x1] == SFREE){
 												queue[qptr] = (y1<<8) + x1;
 												qptr++;
+												if(qmax < qptr) qmax = qptr;
+
 											}
 										}
 									}
 								}
 							}
+											pos.x = 0;
+											pos.y = 1;
+											pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+											myprintf("qmax: %d ", qmax);
 						}else{
 							// field has bomb as neighbor, view count
 							field[cy][cx] = field[cy][cx] & 0x0F;
