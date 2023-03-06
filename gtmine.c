@@ -44,22 +44,37 @@ static char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,
 
 // print code borrowed from gigatron-lcc/stuff/tst/TSTmemcpyext.c
 typedef struct {
+<<<<<<< HEAD
     char *addr;
     char x;
     char y;
+=======
+	char *addr;
+	char x;
+	char y;
+>>>>>>> 7dabd26
 } screenpos_t;
 
 void clear_lines(int l1, int l2)
 {
+<<<<<<< HEAD
     int i;
     for (i=l1; i<l2; i++) {
         char *row = (char*)(videoTable[i+i]<<8);
         memset(row, FGBG & 0xff, 160);
     }
+=======
+	int i;
+	for (i=l1; i<l2; i++) {
+		char *row = (char*)(videoTable[i+i]<<8);
+		memset(row, FGBG & 0xff, 160);
+	}
+>>>>>>> 7dabd26
 }
 
 void clear_screen(screenpos_t *pos)
 {
+<<<<<<< HEAD
     int i;
     for (i=0; i<120; i++) {
         videoTable[i+i] = 8 + i;
@@ -68,6 +83,16 @@ void clear_screen(screenpos_t *pos)
     clear_lines(0,120);
     pos->x = pos->y = 0;
     pos->addr = (char*)(videoTable[0]<<8);
+=======
+	int i;
+	for (i=0; i<120; i++) {
+		videoTable[i+i] = 8 + i;
+		videoTable[i+i+1] = 0;
+	}
+	clear_lines(0,120);
+	pos->x = pos->y = 0;
+	pos->addr = (char*)(videoTable[0]<<8);
+>>>>>>> 7dabd26
 }
 
 void scroll(void)
@@ -172,7 +197,11 @@ int myprintf(const char *fmt, ...)
 }
 // end of print code
 
+<<<<<<< HEAD
 void mySprite(char *addr, char *dest){ // draws sprite like sys function
+=======
+void mySprite(char *addr, char *dest){
+>>>>>>> 7dabd26
     int i,z,v;
     z = 0;
     v = 0;
@@ -286,8 +315,13 @@ int main()
 
     i = 0; // bomb counter temp
     while(i < numberbomb){
+<<<<<<< HEAD
         x = rand() % (fieldsx);
         y = rand() % (fieldsy);
+=======
+        x = rand() % (fieldsx-0);
+        y = rand() % (fieldsy-0);
+>>>>>>> 7dabd26
         if(field[y][x] != SBOMB){ // field is not a bomb, bomb set
             i++;                  // add bomb
             field[y][x] = SBOMB;  // set marker for bomb
@@ -347,7 +381,11 @@ int main()
             break;
             case 0x20: // space
                 // display for debugging
+<<<<<<< HEAD
                 for( y=0; y<fieldsy; y++ ){
+=======
+				for( y=0; y<fieldsy; y++ ){
+>>>>>>> 7dabd26
                     for( x=0; x<fieldsx; x++ ){
                         printSprite(field[y][x], x, y);
                     }
@@ -357,6 +395,7 @@ int main()
             case 0x0A: // enter
             break;
         }
+<<<<<<< HEAD
 
         // display for debugging
         pos.x = 0;
@@ -364,6 +403,15 @@ int main()
         pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
         myprintf("X=%d Y=%d V=%d  ", cx, cy, field[cy][cx]);
 
+=======
+		
+		// display for debugging
+   		pos.x = 0;
+		pos.y = 0;
+		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+		myprintf("X=%d Y=%d V=%d  ", cx, cy, field[cy][cx]);
+		
+>>>>>>> 7dabd26
         while(serialRaw != 0xFF) {}
     }
 
