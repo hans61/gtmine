@@ -1,0 +1,33 @@
+GIGATRON
+
+sprite for game field 6x6 pixel
+
+sprite for minesweeper
+
+  free      1     2      3      4      5      6      7      8    bomb   btrig  cursor hidden flag
+0|...... ..##.. .###.. .###.. .#.... .####. ..##.. .####. ..##.. #...#. #...#. ##..## ...... ..##..
+1|...... ...#.. ....#. ....#. .#.#.. .#.... .#.... ....#. .#..#. .###.. .###.. #....# ...... .###..
+2|...... ...#.. ..##.. ..##.. .####. ..##.. .###.. ...#.. ..##.. #####. #####. ...... ...... ..##..
+3|...... ...#.. .#.... ....#. ...#.. ....#. .#..#. ..#... .#..#. .###.. .###.. ...... ...... ...#..
+4|...... ...#.. .####. .###.. ...#.. .###.. ..##.. ..#... ..##.. #...#. #...#. #....# ...... ..###.
+5|...... ...... ...... ...... ...... ...... ...... ...... ...... ...... ...... ##..## ...... ......
+  ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______
+  012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 
+
+0|aaaaab aaCCab aDDDab aEEEab aFaaab aGGGGb aaHHab aIIIIb aaJJab IaaaIb InnnIn EEssEE pppppq ppNNpq
+1|aaaaab aaaCab aaaaDb aaaaEb aFaFab aGaaab aHaaab aaaaIb aJaaJb aJIIab nMIInn EssssE pppppq pNNNpq
+2|aaaaab aaaCab aaDDab aaEEab aFFFFb aaGGab aHHHab aaaIab aaJJab IIIIIb IIIIIn ssssss pppppq ppNNpq
+3|aaaaab aaaCab aDaaab aaaaEb aaaFab aaaaGb aHaaHb aaIaab aJaaJb aIIIab nIIIan ssssss pppppq pppRpq
+4|aaaaab aaaCab aDDDDb aEEEab aaaFab aGGGab aaHHab aaIaab aaJJab IaaaIb InnnIn EssssE pppppq ppRRRq
+5|bbbbbb bbbbbb bbbbbb bbbbbb bbbbbb bbbbbb bbbbbb bbbbbb bbbbbb bbbbbb nnnnnn EEssEE qqqqqq qqqqqq
+  ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______ ______
+  012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 012345 
+
+colors
+    tga     gigatron  |     tga     gigatron  |     tga     gigatron  |     tga     gigatron
+a = 00FFAA  44 = 0x2c | f = 5500AA  33 = 0x21 | l = 55FFFF  61 = 0x3D | r = 550000   1 = 0x01
+b = AAFFAA  46 = 0x2E | g = AA5500   6 = 0x06 | m = AAFFFF  62 = 0x3e | s = 000000   0 = 0x00
+c = 0000FF  48 = 0x30 | h = 55AAFF  57 = 0x39 | n = FF0055  19 = 0x13 
+d = 00AA00   8 = 0x08 | i = 000055  16 = 0x10 | p = AAAAFF  58 = 0x3A 
+e = FF00AA  35 = 0x23 | j = 5555AA  37 = 0x25 | q = AA00FF  50 = 0x32
+

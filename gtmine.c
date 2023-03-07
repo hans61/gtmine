@@ -56,12 +56,16 @@ typedef struct {
 	char y;
 } screenpos_t;
 
+int leftMargin;
+int fgbg;
+fgbg = FGBG;
+
 void clear_lines(int l1, int l2)
 {
 	int i;
 	for (i=l1; i<l2; i++) {
 		char *row = (char*)(videoTable[i+i]<<8);
-		memset(row, FGBG & 0xff, 160);
+		memset(row, fgbg & 0xff, 160);
 	}
 }
 
@@ -119,7 +123,7 @@ void print_char(screenpos_t *pos, int ch)
 	}
 	addr = pos->addr;
 	for (i=0; i<5; i++) {
-		SYS_VDrawBits(FGBG, SYS_Lup(fntp), addr);
+		SYS_VDrawBits(fgbg, SYS_Lup(fntp), addr);
 		addr += 1;
 		fntp += 1;
 	}
@@ -262,7 +266,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
             ptrChar = (char*)smarker;
             break;
 	}
-	mySprite(ptrChar, (char*)(yy*6+24<<8)+6*xx+2);
+	mySprite(ptrChar, (char*)(yy*6+24<<8)+6*xx+leftMargin);
 }
 
 int main()
@@ -277,6 +281,7 @@ int main()
     int fieldsy;
     int numberbomb;          // number of bombs
 	int gameOver;
+	int newGame;
     int cursorX, cursorY;
     int tx, ty;
     int x1, y1;
@@ -300,12 +305,29 @@ int main()
 	while(1){
 	
 		SYS_SetMode(3);
+		leftMargin = (160 - 6*fieldsx)/2;
+		fgbg = FGBG;
 		
 		clear_screen(&pos);
 		
-	
+		pos.x = 1; pos.y = 0;
+		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+		fgbg = 0x0320;
+		myprintf("B");
+		fgbg = FGBG;
+		myprintf("eginner ");
+		fgbg = 0x0320;
+		myprintf("A");
+		fgbg = FGBG;
+		myprintf("dvanced ");
+		fgbg = 0x0320;
+		myprintf("E");
+		fgbg = FGBG;
+		myprintf("xpert");
+		
 		markerCount = 0;
 		gameOver = 0;
+		newGame = 0;
 		qmax = 0;
 		revealedFields = 0;
 	
@@ -321,7 +343,7 @@ int main()
 		while(i < numberbomb){
 			x = rand() % (fieldsx-1);
 			y = rand() % (fieldsy-1);
-			if(field[y][x] != SBOMB | BHIDDEN){ // field is not a bomb, bomb set
+			if(field[y][x] != (SBOMB | BHIDDEN)){ // field is not a bomb, bomb set
 				i++;                  // add bomb
 				field[y][x] = SBOMB | BHIDDEN;  // set marker for bomb
 			}
@@ -349,12 +371,12 @@ int main()
 			}
 		}
 	
-		// SYS_SetMode(1);
+		SYS_SetMode(2);
 	
 		cursorX = 0;
 		cursorY = 0;
 		
-		mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+		mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
 	
 		while(!gameOver){
 			
@@ -363,21 +385,21 @@ int main()
 					if(cursorY < fieldsy-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY++;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
 					}
 					break;
 				case 0xF7: // up
 					if(cursorY > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY--;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case 0xFD: // left
 					if(cursorX > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX--;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case 0xFE: // right
@@ -385,7 +407,7 @@ int main()
 					if(cursorX < fieldsx-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX++;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case 0x20: // space
@@ -399,8 +421,37 @@ int main()
 							markerCount++;
 						}
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
 					}
+				break;
+				case 'n':
+				case 'N':
+					gameOver = 1;
+					newGame = 1;
+				break;
+				case 'b':
+				case 'B':
+					gameOver = 1;
+					newGame = 1;
+					numberbomb = 10;
+					fieldsx = 9;
+					fieldsy = 9;
+				break;
+				case 'a':
+				case 'A':
+					gameOver = 1;
+					newGame = 1;
+					numberbomb = 40;
+					fieldsx = 16;
+					fieldsy = 16;
+				break;
+				case 'e':
+				case 'E':
+					gameOver = 1;
+					newGame = 1;
+					numberbomb = 88;
+					fieldsx = 26;
+					fieldsy = 17;
 				break;
 				case 'd':
 				case 'D':
@@ -411,24 +462,23 @@ int main()
 					}
 				break;
 				case 0x0A: // enter
-					/*
-					pos.x = 0;
-					pos.y = 1;
-					pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-					myprintf("Field: %d ", field[cursorY][cursorX]);
-					*/
+					if(field[cursorY][cursorX] < 0x10) continue;
 					if(field[cursorY][cursorX] < 0x20){              // marker protects field
 						if((field[cursorY][cursorX] & 0x0F) == SBOMB){
 							// game over
 							gameOver = 1;
 							field[cursorY][cursorX] = SBOMBTRIGGERED;
-							for( y=0; y<fieldsy; y++ ){   // uncover all hidden fields
+							for( y=0; y<fieldsy; y++ ){              // uncover all hidden fields
 								for( x=0; x<fieldsx; x++ ){
 									printSprite((field[y][x] & 0x0F), x, y);
 								}
 							}
 						}else{ // no bomb in the field
-							if((field[cursorY][cursorX] & 0x0F) == SFREE) {
+							field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0F;
+							printSprite(field[cursorY][cursorX], cursorX, cursorY);
+							revealedFields++;
+							if(field[cursorY][cursorX] == SFREE) {
+								// feld ist leer, angrenzende felder können aufgedeckt werden
 								qptr = 0;
 								queue[qptr] = (cursorY<<8) + cursorX;
 								qptr++;
@@ -444,25 +494,28 @@ int main()
 									while(serialRaw == 0xFF) {}
 									while(serialRaw != 0xFF) {}
 */									
-									field[ty][tx] = field[ty][tx] & 0x0F;
-									revealedFields++;
-									printSprite(field[ty][tx], tx, ty);
+									if(field[ty][tx] > 0x0F){
+										revealedFields++;
+										field[ty][tx] = field[ty][tx] & 0x0F;
+										printSprite(field[ty][tx], tx, ty);
+									}
+/*
+									pos.x = 0;
+									pos.y = 1;
+									pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+									myprintf("tx,ty %d,%d rF %d", tx, ty, revealedFields);
+*/
+									// benachbarte felder absuchen
 									for(y = -1; y < 2; y++){
 										for(x = -1; x < 2; x++){
+											// schleife benachbarte felder
 											x1 = tx + x; y1 = ty + y;
-/*	
-												pos.x = 0;
-												pos.y = 1;
-												pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-												myprintf("x1,y1 %d,%d field: %d", x1, y1, field[y1][x1]);
-												while(serialRaw == 0xFF) {}
-												while(serialRaw != 0xFF) {}
-*/									
 											if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
-												field[y1][x1] = field[y1][x1] & 0x0F;
+												// feld liegt im array und ist nicht aufgedeckt
+												field[y1][x1] = field[y1][x1] & 0x0F; // feld aufdecken
+												printSprite(field[y1][x1], x1, y1);   // aufgedecktes feld zeichnen
 												revealedFields++;
-												printSprite(field[y1][x1], x1, y1);
-												if(field[y1][x1] == SFREE){
+												if(field[y1][x1] == SFREE){ // feld hat keine nachbar bomben, zur warteschlange
 													queue[qptr] = (y1<<8) + x1;
 													qptr++;
 													if(qmax < qptr) qmax = qptr;
@@ -472,49 +525,52 @@ int main()
 										}
 									}
 								}
-												pos.x = 15;
-												pos.y = 1;
-												pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-												myprintf("qmax: %d ", qmax);
-							}else{
-								// field has bomb as neighbor, view count
-								field[cursorY][cursorX] = field[cursorY][cursorX] & 0x0F;
-								printSprite(field[cursorY][cursorX], cursorX, cursorY);
+/*
+								pos.x = 15;
+								pos.y = 1;
+								pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+								myprintf("qmax: %d ", qmax);
+*/
 							}
 						}
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin);
 					}
 				break;
 			}
+/*
 			// display for debugging
 			pos.x = 0;
 			pos.y = 0;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-			myprintf("X=%d Y=%d V=%d (%x)  ", cursorX, cursorY, field[cursorY][cursorX], field[cursorY][cursorX]);
-			pos.x = 0;
+			myprintf("V=0x%x revF=%d  ", field[cursorY][cursorX], revealedFields);
+*/
+			pos.x = 1;
 			pos.y = 1;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-			myprintf("%d ", (numberbomb - markerCount));
+			myprintf("Bombs %d ", (numberbomb - markerCount));
 			
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)) gameOver = 1;
-			i = 100;
+			
+			i = 500;
 			while((serialRaw != 0xFF) & (i>0)) {i--;}
 		}
 		// game end
-		pos.x = 0;
-		pos.y = 0;
-		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-		if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
-			myprintf("YOU are the winner");
-		}else{
-			myprintf("You have lost");
+		if(!newGame){
+			pos.x = 0;
+			pos.y = 0;
+			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
+				myprintf("YOU are the winner");
+			}else{
+				myprintf("You have lost");
+			}
+			pos.x = 0;
+			pos.y = 1;
+			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+			myprintf("Hit any key for new game");
+			while(serialRaw == 0xFF) {}
+			while(serialRaw != 0xFF) {}
 		}
-		pos.x = 0;
-		pos.y = 1;
-		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-		myprintf("Hit any key for new game");
-		while(serialRaw == 0xFF) {}
-		while(serialRaw != 0xFF) {}
 	}
 	
     return 0;
