@@ -8,6 +8,10 @@
 
 #define MAXX 26
 #define MAXY 17
+
+// length of the queue for automatic uncovering of game fields.
+// It is an alternative to a recursive function.
+// I am afraid of stack problems with recursive functions.
 #define MAXQ 50
 
 #define SFREE 0
@@ -28,21 +32,22 @@
 #define BHIDDEN 0x10
 #define BMARKER 0x20
 
-static char sfree[]={44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,46,46,46,46,46,46,250};        // 0
-static char s1[]={44,44,48,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,46,46,46,46,46,46,250};           // 1
-static char s2[]={44,8,8,8,44,46,44,44,44,44,8,46,44,44,8,8,44,46,44,8,44,44,44,46,44,8,8,8,8,46,46,46,46,46,46,46,250};                      // 2
-static char s3[]={44,35,35,35,44,46,44,44,44,44,35,46,44,44,35,35,44,46,44,44,44,44,35,46,44,35,35,35,44,46,46,46,46,46,46,46,250};           // 3
-static char s4[]={44,33,44,44,44,46,44,33,44,44,44,46,44,33,44,33,44,46,44,33,33,33,33,46,44,44,44,33,44,46,46,46,46,46,46,46,250};           // 4
-static char s5[]={44,6,6,6,6,46,44,6,44,44,44,46,44,44,6,6,44,46,44,44,44,44,6,46,44,6,6,6,44,46,46,46,46,46,46,46,250};                      // 5
-static char s6[]={44,44,57,57,44,46,44,57,44,44,44,46,44,57,57,57,44,46,44,57,44,44,57,46,44,44,57,57,44,46,46,46,46,46,46,46,250};           // 6
-static char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,44,44,46,44,44,16,44,44,46,46,46,46,46,46,46,250};           // 7
-static char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};           // 8
-static char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};  // 9
-static char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};        // 10 [a]
-// static char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,35,35,35,35,250};                      // 11 [b]
-static char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                      // 11
-static char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};      // 12 [c]
-static char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};          // 13 [d]
+static char sfree[]={44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,46,46,46,46,46,46,250};           // 0
+static char s1[]={44,44,48,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,46,46,46,46,46,46,250};              // 1
+static char s2[]={44,8,8,8,44,46,44,44,44,44,8,46,44,44,8,8,44,46,44,8,44,44,44,46,44,8,8,8,8,46,46,46,46,46,46,46,250};                         // 2
+static char s3[]={44,35,35,35,44,46,44,44,44,44,35,46,44,44,35,35,44,46,44,44,44,44,35,46,44,35,35,35,44,46,46,46,46,46,46,46,250};              // 3
+static char s4[]={44,33,44,44,44,46,44,33,44,44,44,46,44,33,44,33,44,46,44,33,33,33,33,46,44,44,44,33,44,46,46,46,46,46,46,46,250};              // 4
+static char s5[]={44,6,6,6,6,46,44,6,44,44,44,46,44,44,6,6,44,46,44,44,44,44,6,46,44,6,6,6,44,46,46,46,46,46,46,46,250};                         // 5
+static char s6[]={44,44,57,57,44,46,44,57,44,44,44,46,44,57,57,57,44,46,44,57,44,44,57,46,44,44,57,57,44,46,46,46,46,46,46,46,250};              // 6
+static char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,44,44,46,44,44,16,44,44,46,46,46,46,46,46,46,250};              // 7
+static char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};              // 8
+static char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};           // 9
+static char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};  // 10 [0x0a]
+static char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b]
+static char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};         // 12 [0x0c]
+static char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
+
+
 
 // print code borrowed from gigatron-lcc/stuff/tst/TSTmemcpyext.c
 typedef struct {
@@ -189,7 +194,7 @@ void mySprite(char *addr, char *dest){ // draws sprite like sys function
 
 }
 
-void mySpritet(char *addr, char *dest){ // draws sprite with transparency for color 0
+void mySpritet(char *addr, char *dest){ // draws sprite with transparencursorY for color 0
     int i,z,v;
     z = 0;
     v = 0;
@@ -268,213 +273,250 @@ int main()
     
     int i,x,y;
     int offset = 0;
-    int fieldsx = 26;
-    int fieldsy = 17;
-    int numberbomb;
-    int cx, cy;
+    int fieldsx;
+    int fieldsy;
+    int numberbomb;          // number of bombs
+	int gameOver;
+    int cursorX, cursorY;
     int tx, ty;
     int x1, y1;
-	int markerCount;
-	int queue[MAXQ];
-	int qptr;
-	int qmax;
-    char field[MAXY][MAXX]; 
+	int markerCount;         // counter for marked fields
+	int revealedFields;      // counter for revealed fields
+	int queue[MAXQ];         // queue for automatic uncovering of game fields
+	int qptr;                // pointer to queue
+	int qmax;                // for debugging
+    char field[MAXY][MAXX];  // byte array for playing field, lower nibble sprite id, upper nibble flags
     char *selectspr;
     
-    clear_screen(&pos);
-    
+    //numberbomb = fieldsx * fieldsy * 15 / 100; // 15% bombs
+	// numberbomb = 88;
+	// fieldsx = 26;
+	// fieldsy = 17;
+	
+	numberbomb = 10;
+	fieldsx = 9;
+	fieldsy = 9;
 
-    numberbomb = fieldsx * fieldsy * 15 / 100; // 15% bombs
-	markerCount = 0;
-	qmax = 0;
-
-    for( y=0; y<fieldsy; y++ ){
-        for( x=0; x<fieldsx; x++ ){
-            // field[y][x] = SFREE;
-            field[y][x] = BHIDDEN;
-            printSprite(field[y][x], x, y);
-        }
-    }
-
-    i = 0; // bomb counter temp
-    while(i < numberbomb){
-        x = rand() % (fieldsx-1);
-        y = rand() % (fieldsy-1);
-        if(field[y][x] != SBOMB | BHIDDEN){ // field is not a bomb, bomb set
-            i++;                  // add bomb
-            field[y][x] = SBOMB | BHIDDEN;  // set marker for bomb
-		}
-	}
-
-    for( y=0; y<fieldsy; y++ ){
-        for( x=0; x<fieldsx; x++ ){
-			// count neighboring bombs
-			if(field[y][x] != (SBOMB | BHIDDEN)){
-				if(x < fieldsx-1 ){ // Observe margins
-					if(field[y][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // right
-					if(y < fieldsy+1 ) if(field[y+1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom right
-					if(y > 0 ) if(field[y-1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top right
-				}
-				if(x > 0 ){
-					if(field[y][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // left
-					if(y < fieldsy+1 ) if(field[y+1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom left
-					if(y > 0 ) if(field[y-1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top left
-				}
-				if(y < fieldsy-1 ){
-					if(field[y+1][x] == (SBOMB | BHIDDEN)) field[y][x]++;                      // bottom
-				}
-				if(y > 0 ) if(field[y-1][x] == (SBOMB | BHIDDEN)) field[y][x]++;               // top
+	while(1){
+	
+		SYS_SetMode(3);
+		
+		clear_screen(&pos);
+		
+	
+		markerCount = 0;
+		gameOver = 0;
+		qmax = 0;
+		revealedFields = 0;
+	
+		for( y=0; y<fieldsy; y++ ){
+			for( x=0; x<fieldsx; x++ ){
+				// field[y][x] = SFREE;
+				field[y][x] = BHIDDEN;
+				printSprite(field[y][x], x, y);
 			}
-        }
-    }
-
-
-    cx = 0;
-    cy = 0;
-    
-    mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
-
-    while(1){
-        
-        switch(buttonState) {
-            case 0xFB: // down
-                if(cy < fieldsy-1){
-					printSprite((field[cy][cx]), cx, cy);
-                    cy++;
-                    mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
-                }
-                break;
-            case 0xF7: // up
-                if(cy > 0){
-					printSprite((field[cy][cx]), cx, cy);
-                    cy--;
-                    mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
-                }
-            break;
-            case 0xFD: // left
-                if(cx > 0){
-					printSprite((field[cy][cx]), cx, cy);
-                    cx--;
-                    mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
-                }
-            break;
-            case 0xFE: // right
-				// display for debugging
-                if(cx < fieldsx-1){
-					printSprite((field[cy][cx]), cx, cy);
-                    cx++;
-                    mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
-                }
-            break;
-            case 0x20: // space
-			// set/unset marker
-				if((field[cy][cx] & BHIDDEN) == BHIDDEN){      // nur auf verdeckten feldern
-					if((field[cy][cx] & BMARKER) == BMARKER){
-						field[cy][cx] = field[cy][cx] & 0x1F;
-						markerCount--;
-					}else{
-						field[cy][cx] = field[cy][cx] | 0x20;
-						markerCount++;
+		}
+	
+		i = 0; // bomb counter temp
+		while(i < numberbomb){
+			x = rand() % (fieldsx-1);
+			y = rand() % (fieldsy-1);
+			if(field[y][x] != SBOMB | BHIDDEN){ // field is not a bomb, bomb set
+				i++;                  // add bomb
+				field[y][x] = SBOMB | BHIDDEN;  // set marker for bomb
+			}
+		}
+	
+		for( y=0; y<fieldsy; y++ ){
+			for( x=0; x<fieldsx; x++ ){
+				// count neighboring bombs
+				if(field[y][x] != (SBOMB | BHIDDEN)){
+					if(x < fieldsx-1 ){ // Observe margins
+						if(field[y][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // right
+						if(y < fieldsy+1 ) if(field[y+1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom right
+						if(y > 0 ) if(field[y-1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top right
 					}
-					printSprite((field[cy][cx]), cx, cy);
-                    mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
+					if(x > 0 ){
+						if(field[y][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // left
+						if(y < fieldsy+1 ) if(field[y+1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom left
+						if(y > 0 ) if(field[y-1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top left
+					}
+					if(y < fieldsy-1 ){
+						if(field[y+1][x] == (SBOMB | BHIDDEN)) field[y][x]++;                      // bottom
+					}
+					if(y > 0 ) if(field[y-1][x] == (SBOMB | BHIDDEN)) field[y][x]++;               // top
 				}
-			break;
-			case 'd':
-			case 'D':
-                for( y=0; y<fieldsy; y++ ){
-                    for( x=0; x<fieldsx; x++ ){
-                        printSprite((field[y][x] & 0x0F), x, y);
-                    }
-                }
-            break;
-            case 0x0A: // enter
-				/*
-				pos.x = 0;
-				pos.y = 1;
-				pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-				myprintf("Field: %d ", field[cy][cx]);
-				*/
-				if(field[cy][cx] < 0x20){              // marker protects field
-					if((field[cy][cx] & 0x0F) == SBOMB){
-						// game over
-						field[cy][cx] = SBOMBTRIGGERED;
-						for( y=0; y<fieldsy; y++ ){   // uncover all hidden fields
-							for( x=0; x<fieldsx; x++ ){
-								printSprite((field[y][x] & 0x0F), x, y);
-							}
+			}
+		}
+	
+		// SYS_SetMode(1);
+	
+		cursorX = 0;
+		cursorY = 0;
+		
+		mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+	
+		while(!gameOver){
+			
+			switch(buttonState) {
+				case 0xFB: // down
+					if(cursorY < fieldsy-1){
+						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+						cursorY++;
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+					}
+					break;
+				case 0xF7: // up
+					if(cursorY > 0){
+						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+						cursorY--;
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+					}
+				break;
+				case 0xFD: // left
+					if(cursorX > 0){
+						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+						cursorX--;
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+					}
+				break;
+				case 0xFE: // right
+					// display for debugging
+					if(cursorX < fieldsx-1){
+						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+						cursorX++;
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+					}
+				break;
+				case 0x20: // space
+				// set/unset marker
+					if((field[cursorY][cursorX] & BHIDDEN) == BHIDDEN){      // nur auf verdeckten feldern
+						if((field[cursorY][cursorX] & BMARKER) == BMARKER){
+							field[cursorY][cursorX] = field[cursorY][cursorX] & 0x1F;
+							markerCount--;
+						}else{
+							field[cursorY][cursorX] = field[cursorY][cursorX] | 0x20;
+							markerCount++;
 						}
-					}else{ // no bomb in the field
-						if((field[cy][cx] & 0x0F) == SFREE) {
-							qptr = 0;
-							queue[qptr] = (cy<<8) + cx;
-							qptr++;
-							while(qptr>0){
-								qptr--;
-								ty = queue[qptr]>>8;
-								tx = queue[qptr] & 0xFF;
-/*
-								pos.x = 0;
-								pos.y = 1;
-								pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-								myprintf("tx,ty %d,%d ", tx, ty);
-								while(serialRaw == 0xFF) {}
-								while(serialRaw != 0xFF) {}
-*/								
-								field[ty][tx] = field[ty][tx] & 0x0F;
-								printSprite(field[ty][tx], tx, ty);
-								for(y = -1; y < 2; y++){
-									for(x = -1; x < 2; x++){
-										x1 = tx + x; y1 = ty + y;
-/*
-											pos.x = 0;
-											pos.y = 1;
-											pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-											myprintf("x1,y1 %d,%d field: %d", x1, y1, field[y1][x1]);
-											while(serialRaw == 0xFF) {}
-											while(serialRaw != 0xFF) {}
-*/								
-										if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
-											field[y1][x1] = field[y1][x1] & 0x0F;
-											printSprite(field[y1][x1], x1, y1);
-											if(field[y1][x1] == SFREE){
-												queue[qptr] = (y1<<8) + x1;
-												qptr++;
-												if(qmax < qptr) qmax = qptr;
-
+						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
+					}
+				break;
+				case 'd':
+				case 'D':
+					for( y=0; y<fieldsy; y++ ){
+						for( x=0; x<fieldsx; x++ ){
+							printSprite((field[y][x] & 0x0F), x, y);
+						}
+					}
+				break;
+				case 0x0A: // enter
+					/*
+					pos.x = 0;
+					pos.y = 1;
+					pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+					myprintf("Field: %d ", field[cursorY][cursorX]);
+					*/
+					if(field[cursorY][cursorX] < 0x20){              // marker protects field
+						if((field[cursorY][cursorX] & 0x0F) == SBOMB){
+							// game over
+							gameOver = 1;
+							field[cursorY][cursorX] = SBOMBTRIGGERED;
+							for( y=0; y<fieldsy; y++ ){   // uncover all hidden fields
+								for( x=0; x<fieldsx; x++ ){
+									printSprite((field[y][x] & 0x0F), x, y);
+								}
+							}
+						}else{ // no bomb in the field
+							if((field[cursorY][cursorX] & 0x0F) == SFREE) {
+								qptr = 0;
+								queue[qptr] = (cursorY<<8) + cursorX;
+								qptr++;
+								while(qptr>0){
+									qptr--;
+									ty = queue[qptr]>>8;
+									tx = queue[qptr] & 0xFF;
+/*	
+									pos.x = 0;
+									pos.y = 1;
+									pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+									myprintf("tx,ty %d,%d ", tx, ty);
+									while(serialRaw == 0xFF) {}
+									while(serialRaw != 0xFF) {}
+*/									
+									field[ty][tx] = field[ty][tx] & 0x0F;
+									revealedFields++;
+									printSprite(field[ty][tx], tx, ty);
+									for(y = -1; y < 2; y++){
+										for(x = -1; x < 2; x++){
+											x1 = tx + x; y1 = ty + y;
+/*	
+												pos.x = 0;
+												pos.y = 1;
+												pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+												myprintf("x1,y1 %d,%d field: %d", x1, y1, field[y1][x1]);
+												while(serialRaw == 0xFF) {}
+												while(serialRaw != 0xFF) {}
+*/									
+											if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
+												field[y1][x1] = field[y1][x1] & 0x0F;
+												revealedFields++;
+												printSprite(field[y1][x1], x1, y1);
+												if(field[y1][x1] == SFREE){
+													queue[qptr] = (y1<<8) + x1;
+													qptr++;
+													if(qmax < qptr) qmax = qptr;
+	
+												}
 											}
 										}
 									}
 								}
+												pos.x = 15;
+												pos.y = 1;
+												pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+												myprintf("qmax: %d ", qmax);
+							}else{
+								// field has bomb as neighbor, view count
+								field[cursorY][cursorX] = field[cursorY][cursorX] & 0x0F;
+								printSprite(field[cursorY][cursorX], cursorX, cursorY);
 							}
-											pos.x = 0;
-											pos.y = 1;
-											pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-											myprintf("qmax: %d ", qmax);
-						}else{
-							// field has bomb as neighbor, view count
-							field[cy][cx] = field[cy][cx] & 0x0F;
-							printSprite(field[cy][cx], cx, cy);
 						}
+						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+2 );
 					}
-					mySpritet((char*)scursor, (char*)(cy*6+24<<8)+6*cx+2 );
-				}
-            break;
-        }
-		// display for debugging
-   		pos.x = 0;
+				break;
+			}
+			// display for debugging
+			pos.x = 0;
+			pos.y = 0;
+			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+			myprintf("X=%d Y=%d V=%d (%x)  ", cursorX, cursorY, field[cursorY][cursorX], field[cursorY][cursorX]);
+			pos.x = 0;
+			pos.y = 1;
+			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
+			myprintf("%d ", (numberbomb - markerCount));
+			
+			if((revealedFields+numberbomb)==(fieldsx*fieldsy)) gameOver = 1;
+			i = 100;
+			while((serialRaw != 0xFF) & (i>0)) {i--;}
+		}
+		// game end
+		pos.x = 0;
 		pos.y = 0;
 		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-		myprintf("X=%d Y=%d V=%d (%x)  ", cx, cy, field[cy][cx], field[cy][cx]);
-   		pos.x = 0;
+		if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
+			myprintf("YOU are the winner");
+		}else{
+			myprintf("You have lost");
+		}
+		pos.x = 0;
 		pos.y = 1;
 		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-		myprintf("Marker: %d ", markerCount);
-		
-        while(serialRaw != 0xFF) {}
-    }
-    
+		myprintf("Hit any key for new game");
+		while(serialRaw == 0xFF) {}
+		while(serialRaw != 0xFF) {}
+	}
+	
     return 0;
 
 }
-
