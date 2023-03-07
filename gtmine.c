@@ -275,23 +275,19 @@ int main()
     unsigned int ticks = _clock();
     
     
-    int i,x,y;
-    int offset = 0;
-    int fieldsx;
-    int fieldsy;
-    int numberbomb;          // number of bombs
-	int gameOver;
-	int newGame;
-    int cursorX, cursorY;
-    int tx, ty;
-    int x1, y1;
-	int markerCount;         // counter for marked fields
-	int revealedFields;      // counter for revealed fields
-	int queue[MAXQ];         // queue for automatic uncovering of game fields
-	int qptr;                // pointer to queue
-	int qmax;                // for debugging
-    char field[MAXY][MAXX];  // byte array for playing field, lower nibble sprite id, upper nibble flags
-    char *selectspr;
+    int i, x, y, x1, y1, tx, ty; // Hilfsvariablen
+    int fieldsx;             	 // Breite des Spielfeldes
+    int fieldsy;             	 // Höhe des Spielfeldes
+    int numberbomb;          	 // number of bombs
+	int gameOver;	             // Flag, Spielende erreicht
+	int newGame;	 			 // Flag, Neues Spiel starten ohne das alte zu beenden
+    int cursorX, cursorY;        // Cursor im Spielfeld	 
+	int markerCount;         	 // counter for marked fields
+	int revealedFields;      	 // counter for revealed fields
+	int queue[MAXQ];         	 // queue for automatic uncovering of game fields
+	int qptr;                	 // pointer to queue
+//	int qmax;                	 // for debugging
+    char field[MAXY][MAXX];  	 // byte array for playing field, lower nibble sprite id, upper nibble flags
     
     //numberbomb = fieldsx * fieldsy * 15 / 100; // 15% bombs
 	// numberbomb = 88;
@@ -328,7 +324,7 @@ int main()
 		markerCount = 0;
 		gameOver = 0;
 		newGame = 0;
-		qmax = 0;
+		// qmax = 0;
 		revealedFields = 0;
 	
 		for( y=0; y<fieldsy; y++ ){
@@ -518,7 +514,7 @@ int main()
 												if(field[y1][x1] == SFREE){ // feld hat keine nachbar bomben, zur warteschlange
 													queue[qptr] = (y1<<8) + x1;
 													qptr++;
-													if(qmax < qptr) qmax = qptr;
+													// if(qmax < qptr) qmax = qptr;
 	
 												}
 											}
