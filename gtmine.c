@@ -4,6 +4,8 @@
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
+#define SYS_Sprite6
+
 #define FGBG 0x3f20
 
 #define MAXX 26
@@ -198,6 +200,7 @@ int myprintf(const char *fmt, ...)
 	return 0;
 }
 // end of print code
+#ifndef SYS_Sprite6
 void mySprite(char *addr, char *dest){ // draws sprite like sys function
     int i,z,v;
     z = 0;
@@ -213,7 +216,7 @@ void mySprite(char *addr, char *dest){ // draws sprite like sys function
     }
 
 }
-
+#endif
 void mySpritet(char *addr, char *dest){ // draws sprite with transparencursorY for color 0
     int i,z,v;
     z = 0;
@@ -282,7 +285,11 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
             ptrChar = (char*)smarker;
             break;
 	}
+#ifdef SYS_Sprite6
+	SYS_Sprite6_v3(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
+#else
 	mySprite(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
+#endif
 }
 
 int main()
