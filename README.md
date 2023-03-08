@@ -17,3 +17,39 @@ To play a bit with the glcc compiler I decided to use Minesweeper. You can find 
 https://github.com/lb3361/gigatron-lcc
 
 ## My Version
+
+
+## use SYS_Sprite6_v3
+
+To use SYS_Sprite6_v3 it must be added glcc.To use SYS_Sprite6_v3, it must be added glcc. I have added the following code to these two files:
+
+gigatron-lcc/gigatron/libc/gigatron.s
+
+```
+    # ----------------------------------------
+    # void SYS_Sprite6_v3(char *addr, char *dest);
+    def code0():
+        nohop()
+        label('SYS_Sprite6_v3')
+        _LDI('SYS_Sprite6_v3_64');STW('sysFn')
+        LDW(R8);STW('sysArgs0')
+        LDW(R9);SYS(64);RET()
+
+    module(name='sys_sprite6.s',
+           code=[('EXPORT', 'SYS_Sprite6_v3'),
+                 ('CODE', 'SYS_Sprite6_v3', code0) ])
+```
+
+gigatron-lcc/include/gigatron/gigatron/sys.h
+
+```
+void SYS_Sprite6_v3(char *source, char *destination);
+#define has_SYS_Sprite6_v3() 1
+```
+
+After that, the glcc must be rebuilt once again.
+
+```
+/gigatron-lcc$ suso make clean
+/gigatron-lcc$ suso make install
+```
