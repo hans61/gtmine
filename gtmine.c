@@ -8,7 +8,6 @@
 
 #define MAXX 26
 #define MAXY 17
-#define TOP_MARGIN 25
 
 // Game controller bits (actual controllers in kit have negative output)
 // +----------------------------------------+
@@ -75,6 +74,7 @@ typedef struct {
 int leftMargin;
 int fgbg;
 fgbg = FGBG;
+char topMargin;
 
 void clear_lines(int l1, int l2)
 {
@@ -282,7 +282,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
             ptrChar = (char*)smarker;
             break;
 	}
-	mySprite(ptrChar, (char*)(yy*6+TOP_MARGIN<<8)+6*xx+leftMargin);
+	mySprite(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
 }
 
 int main()
@@ -315,6 +315,7 @@ int main()
 	numberbomb = 10;
 	fieldsx = 9;
 	fieldsy = 9;
+	topMargin = 35;
 
 	while(1){
 	
@@ -397,7 +398,7 @@ int main()
 		cursorX = 0;
 		cursorY = 0;
 		
-		mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
+		mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 	
 		while(!gameOver){
 			
@@ -407,7 +408,7 @@ int main()
 					if(cursorY < fieldsy-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY++;
-						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 					break;
 				case BUTTON_UP: 
@@ -415,7 +416,7 @@ int main()
 					if(cursorY > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY--;
-						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case BUTTON_LEFT:
@@ -423,7 +424,7 @@ int main()
 					if(cursorX > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX--;
-						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case BUTTON_RIGHT:
@@ -432,7 +433,7 @@ int main()
 					if(cursorX < fieldsx-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX++;
-						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case BUTTON_B:
@@ -446,7 +447,7 @@ int main()
 							markerCount++;
 						}
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case 'n': // start new game
@@ -462,6 +463,7 @@ int main()
 					numberbomb = 10;
 					fieldsx = 9;
 					fieldsy = 9;
+					topMargin = 35;
 				break;
 				case 'a': // new game advanced
 				case 'A':
@@ -470,6 +472,7 @@ int main()
 					numberbomb = 40;
 					fieldsx = 16;
 					fieldsy = 16;
+					topMargin = 28;
 				break;
 				case 'e': // new game expert
 				case 'E':
@@ -478,6 +481,7 @@ int main()
 					numberbomb = 88;
 					fieldsx = 26;
 					fieldsy = 17;
+					topMargin = 25;
 				break;
 				case 'd': // debug show field, uncover
 				case 'D':
@@ -562,7 +566,7 @@ int main()
 */
 							}
 						}
-						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin);
+						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin);
 					}
 				break;
 			}
