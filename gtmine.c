@@ -15,14 +15,14 @@
 // |  Left    Right               B     A*  |
 // |      Down      Select Start     A      |
 // +----------------------------------------+ *=Auto fire
-#define BUTTON_RIGHT    1
-#define BUTTON_LEFT     2
-#define BUTTON_DOWN     4
-#define BUTTON_UP       8
-#define BUTTON_START   16
-#define BUTTON_SELECT  32
-#define BUTTON_B       64
-#define BUTTON_A      128
+#define BUTTON_RIGHT  0xfe
+#define BUTTON_LEFT   0xfd
+#define BUTTON_DOWN   0xfb
+#define BUTTON_UP     0xf7
+#define BUTTON_START  0xef
+#define BUTTON_SELECT 0xdf
+#define BUTTON_B      0xbf
+#define BUTTON_A      0x7f
 
 // length of the queue for automatic uncovering of game fields.
 // It is an alternative to a recursive function.
@@ -403,32 +403,29 @@ int main()
 		while(!gameOver){
 			
 			switch(buttonState) {
-				case BUTTON_DOWN:
-				case 0xFB: // down
+			//switch(buttonRaw) {
+				case BUTTON_DOWN: // down
 					if(cursorY < fieldsy-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 					break;
-				case BUTTON_UP: 
-				case 0xF7: // up
+				case BUTTON_UP: // up
 					if(cursorY > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY--;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 				break;
-				case BUTTON_LEFT:
-				case 0xFD: // left
+				case BUTTON_LEFT: // left
 					if(cursorX > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX--;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
 				break;
-				case BUTTON_RIGHT:
-				case 0xFE: // right
+				case BUTTON_RIGHT: // right
 					// display for debugging
 					if(cursorX < fieldsx-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
