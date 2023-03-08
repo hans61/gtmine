@@ -295,9 +295,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
 int main()
 {
     
-    unsigned int ticks = _clock();
-    
-    
+    unsigned int ticks;
     int i, x, y, x1, y1, tx, ty; // help variables
     char fieldsx;             	 // width of the playing field
     char fieldsy;             	 // height of the playing field
@@ -311,14 +309,8 @@ int main()
 	char revealedFields;      	 // counter for revealed fields
 	unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
 	char qptr;                	 // pointer to queue
-//	int qmax;                	 // for debugging
     char field[MAXY][MAXX];  	 // byte array for playing field, lower nibble sprite id, upper nibble flags
     
-    // numberbomb = fieldsx * fieldsy * 15 / 100; // 15% bombs
-	// numberbomb = 88;
-	// fieldsx = 26;
-	// fieldsy = 17;
-	
 	numberbomb = 10;
 	fieldsx = 9;
 	fieldsy = 9;
@@ -499,7 +491,10 @@ int main()
 				case BUTTON_A:
 				case 0x0A: // uncover game field with enter key
 					if(field[cursorY][cursorX] < 0x10) continue;
-					firstClick = 1;
+					if(firstClick == 0){
+						firstClick = 1;
+						ticks = _clock();
+					}
 					if(field[cursorY][cursorX] < 0x20){              // marker protects field
 						if((field[cursorY][cursorX] & 0x0F) == SBOMB){
 							// game over
@@ -523,25 +518,11 @@ int main()
 									qptr--;
 									ty = queue[qptr]>>8;
 									tx = queue[qptr] & 0xFF;
-/*	
-									pos.x = 0;
-									pos.y = 1;
-									pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-									myprintf("tx,ty %d,%d ", tx, ty);
-									while(serialRaw == 0xFF) {}
-									while(serialRaw != 0xFF) {}
-*/									
 									if(field[ty][tx] > 0x0F){
 										revealedFields++;
 										field[ty][tx] = field[ty][tx] & 0x0F;
 										printSprite(field[ty][tx], tx, ty);
 									}
-/*
-									pos.x = 0;
-									pos.y = 1;
-									pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-									myprintf("tx,ty %d,%d rF %d", tx, ty, revealedFields);
-*/
 									// search neighboring fields
 									for(y = -1; y < 2; y++){
 										for(x = -1; x < 2; x++){
@@ -555,32 +536,17 @@ int main()
 												if(field[y1][x1] == SFREE){ // field has no neighbor bombs, add to queue
 													queue[qptr] = (y1<<8) + x1;
 													qptr++;
-													// if(qmax < qptr) qmax = qptr; // debug, maximum size of elements in queue
-	
 												}
 											}
 										}
 									}
 								}
-/*
-								pos.x = 15;
-								pos.y = 1;
-								pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-								myprintf("qmax: %d ", qmax);
-*/
 							}
 						}
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin);
 					}
 				break;
 			}
-/*
-			// display for debugging
-			pos.x = 0;
-			pos.y = 0;
-			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-			myprintf("V=0x%x revF=%d  ", field[cursorY][cursorX], revealedFields);
-*/
 			pos.x = 1;
 			pos.y = 1;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
@@ -610,7 +576,7 @@ int main()
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
 				myprintf("YOU are the winner!");
 			}else{
-				myprintf("You have lost ;)");
+				myprintf("You have lost");
 			}
 			pos.x = 0;
 			pos.y = 1;
