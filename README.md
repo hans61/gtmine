@@ -18,6 +18,7 @@ https://github.com/lb3361/gigatron-lcc
 
 ## My Version
 
+![gtmine for Gigatron](picture/gtmine-expert.jpg)
 
 ## use SYS_Sprite6_v3
 
@@ -53,3 +54,4 @@ After that, the glcc must be rebuilt once again.
 /gigatron-lcc$ suso make clean
 /gigatron-lcc$ suso make install
 ```
+
