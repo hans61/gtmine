@@ -8,6 +8,7 @@
 
 #define MAXX 26
 #define MAXY 17
+#define TOP_MARGIN 25
 
 // Game controller bits (actual controllers in kit have negative output)
 // +----------------------------------------+
@@ -281,7 +282,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
             ptrChar = (char*)smarker;
             break;
 	}
-	mySprite(ptrChar, (char*)(yy*6+24<<8)+6*xx+leftMargin);
+	mySprite(ptrChar, (char*)(yy*6+TOP_MARGIN<<8)+6*xx+leftMargin);
 }
 
 int main()
@@ -324,7 +325,7 @@ int main()
 		clear_screen(&pos);
 		
 		fgbg = 0x030A;
-		clear_lines(0,17);
+		clear_lines(0,16);
 		pos.x = 1; pos.y = 0;
 		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 		myprintf("B");
@@ -396,7 +397,7 @@ int main()
 		cursorX = 0;
 		cursorY = 0;
 		
-		mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
+		mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
 	
 		while(!gameOver){
 			
@@ -406,7 +407,7 @@ int main()
 					if(cursorY < fieldsy-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY++;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
 					}
 					break;
 				case BUTTON_UP: 
@@ -414,7 +415,7 @@ int main()
 					if(cursorY > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY--;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case BUTTON_LEFT:
@@ -422,7 +423,7 @@ int main()
 					if(cursorX > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX--;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case BUTTON_RIGHT:
@@ -431,7 +432,7 @@ int main()
 					if(cursorX < fieldsx-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX++;
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case BUTTON_B:
@@ -445,7 +446,7 @@ int main()
 							markerCount++;
 						}
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin );
+						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin );
 					}
 				break;
 				case 'n': // start new game
@@ -561,7 +562,7 @@ int main()
 */
 							}
 						}
-						mySpritet((char*)scursor, (char*)(cursorY*6+24<<8)+6*cursorX+leftMargin);
+						mySpritet((char*)scursor, (char*)(cursorY*6+TOP_MARGIN<<8)+6*cursorX+leftMargin);
 					}
 				break;
 			}
@@ -579,27 +580,29 @@ int main()
 			
 			if(firstClick) seconds = (_clock() - ticks)/60;
 
-			pos.x = 20;
+			pos.x = 22;
 			pos.y = 1;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			if(seconds<10) myprintf("0");			
 			if(seconds<100) myprintf("0");			
-			myprintf("%d ", seconds);			
+			myprintf("%d", seconds);			
 			
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)) gameOver = 1;
 			
 			// i = 500; while((serialRaw != 0xFF) & (i>0)) {i--;}
-			_wait(30);
+			_wait(5);
 		}
 		// game end
 		if(!newGame){
+			fgbg = 0x0F0A;
+			clear_lines(0,16);
 			pos.x = 0;
 			pos.y = 0;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
-				myprintf("YOU are the winner");
+				myprintf("YOU are the winner!");
 			}else{
-				myprintf("You have lost");
+				myprintf("You have lost ;)");
 			}
 			pos.x = 0;
 			pos.y = 1;
