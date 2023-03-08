@@ -20,6 +20,18 @@ https://github.com/lb3361/gigatron-lcc
 
 ![gtmine for Gigatron](picture/gtmine-expert.jpg)
 
+Game controls:
+
+- Move cursor with the corresponding key on the keyboard or controller
+- Mark field with SPACE or key B on the controller
+- Uncover field with ENTER or key A on the controller
+- Restart the game N key or Start key on the controller
+- Change game strength
+  - Beginner: key B
+  - Advanced: key A
+  - Expert: key E
+- Key D reveals the playing field. It is not a game function, but is used for debugging.
+
 ## use SYS_Sprite6_v3
 
 To use SYS_Sprite6_v3 it must be added glcc.To use SYS_Sprite6_v3, it must be added glcc. I have added the following code to these two files:
