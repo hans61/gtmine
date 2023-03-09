@@ -75,5 +75,9 @@ The game is created with:
 ```
 or
 ```
-/gtmine$ glcc gtmine.c -map=32k -o gtmine.gt1
+/gtmine$ glcc -map=32k gtmine.c -o gtmine.gt1
+```
+or for rom
+```
+/gtmine$ glcc -rom=v5a -map=32k gtmine.c -o gtmine.gt1
 ```
