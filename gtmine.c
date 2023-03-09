@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
+#include <gigatron/console.h>
 #include <gigatron/sys.h>
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
-#define SYS_Sprite6
-
-#define FGBG 0x3f20
+//#define FGBG 0x3f20
+#define FGBG 0x3f38
 
 #define MAXX 26
 #define MAXY 17
@@ -49,174 +49,27 @@
 #define BHIDDEN 0x10
 #define BMARKER 0x20
 
-static char sfree[]={44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,46,46,46,46,46,46,250};           // 0
-static char s1[]={44,44,48,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,46,46,46,46,46,46,250};              // 1
-static char s2[]={44,8,8,8,44,46,44,44,44,44,8,46,44,44,8,8,44,46,44,8,44,44,44,46,44,8,8,8,8,46,46,46,46,46,46,46,250};                         // 2
-static char s3[]={44,35,35,35,44,46,44,44,44,44,35,46,44,44,35,35,44,46,44,44,44,44,35,46,44,35,35,35,44,46,46,46,46,46,46,46,250};              // 3
-static char s4[]={44,33,44,44,44,46,44,33,44,44,44,46,44,33,44,33,44,46,44,33,33,33,33,46,44,44,44,33,44,46,46,46,46,46,46,46,250};              // 4
-static char s5[]={44,6,6,6,6,46,44,6,44,44,44,46,44,44,6,6,44,46,44,44,44,44,6,46,44,6,6,6,44,46,46,46,46,46,46,46,250};                         // 5
-static char s6[]={44,44,57,57,44,46,44,57,44,44,44,46,44,57,57,57,44,46,44,57,44,44,57,46,44,44,57,57,44,46,46,46,46,46,46,46,250};              // 6
-static char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,44,44,46,44,44,16,44,44,46,46,46,46,46,46,46,250};              // 7
-static char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};              // 8
-static char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};           // 9
-static char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};  // 10 [0x0a]
-static char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b]
-static char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};         // 12 [0x0c]
-static char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
+const char sfree[]={44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,44,44,44,44,44,46,46,46,46,46,46,46,250};           // 0
+const char s1[]={44,44,48,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,44,44,44,48,44,46,46,46,46,46,46,46,250};              // 1
+const char s2[]={44,8,8,8,44,46,44,44,44,44,8,46,44,44,8,8,44,46,44,8,44,44,44,46,44,8,8,8,8,46,46,46,46,46,46,46,250};                         // 2
+const char s3[]={44,35,35,35,44,46,44,44,44,44,35,46,44,44,35,35,44,46,44,44,44,44,35,46,44,35,35,35,44,46,46,46,46,46,46,46,250};              // 3
+const char s4[]={44,33,44,44,44,46,44,33,44,44,44,46,44,33,44,33,44,46,44,33,33,33,33,46,44,44,44,33,44,46,46,46,46,46,46,46,250};              // 4
+const char s5[]={44,6,6,6,6,46,44,6,44,44,44,46,44,44,6,6,44,46,44,44,44,44,6,46,44,6,6,6,44,46,46,46,46,46,46,46,250};                         // 5
+const char s6[]={44,44,57,57,44,46,44,57,44,44,44,46,44,57,57,57,44,46,44,57,44,44,57,46,44,44,57,57,44,46,46,46,46,46,46,46,250};              // 6
+const char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,44,44,46,44,44,16,44,44,46,46,46,46,46,46,46,250};              // 7
+const char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};              // 8
+const char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};           // 9
+const char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};  // 10 [0x0a]
+const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b]
+const char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};         // 12 [0x0c]
+const char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
 
-
-
-// print code borrowed from gigatron-lcc/stuff/tst/TSTmemcpyext.c
-typedef struct {
-	char *addr;
-	char x;
-	char y;
-} screenpos_t;
 
 int leftMargin;
 int fgbg;
 fgbg = FGBG;
 char topMargin;
 
-void clear_lines(int l1, int l2)
-{
-	int i;
-	for (i=l1; i<l2; i++) {
-		char *row = (char*)(videoTable[i+i]<<8);
-		memset(row, fgbg & 0xff, 160);
-	}
-}
-
-void clear_screen(screenpos_t *pos)
-{
-	int i;
-	for (i=0; i<120; i++) {
-		videoTable[i+i] = 8 + i;
-		videoTable[i+i+1] = 0;
-	}
-	clear_lines(0,120);
-	pos->x = pos->y = 0;
-	pos->addr = (char*)(videoTable[0]<<8);
-}
-
-void scroll(void)
-{
-	char pages[8];
-	int i;
-	for (i=0; i<8; i++)
-		pages[i] = videoTable[i+i];
-	for (i=0; i<112; i++)
-		videoTable[i+i] = videoTable[i+i+16];
-	for (i=112; i<120; i++)
-		videoTable[i+i] = pages[i-112];
-}
-
-void newline(screenpos_t *pos)
-{
-	pos->x = 0;
-	pos->y += 1;
-	if (pos->y >  14) {
-		scroll();
-		clear_lines(112,120);
-		pos->y = 14;
-	}
-	pos->addr = (char*)(videoTable[16*pos->y]<<8);
-}
-
-void print_char(screenpos_t *pos, int ch)
-{
-	unsigned int fntp;
-	char *addr;
-	int i;
-	if (ch < 32) {
-		if (ch == '\n') 
-			newline(pos);
-		return;
-	} else if (ch < 82) {
-		fntp = font32up + 5 * (ch - 32);
-	} else if (ch < 132) {
-		fntp = font82up + 5 * (ch - 82);
-	} else {
-		return;
-	}
-	addr = pos->addr;
-	for (i=0; i<5; i++) {
-		SYS_VDrawBits(fgbg, SYS_Lup(fntp), addr);
-		addr += 1;
-		fntp += 1;
-	}
-	pos->x += 1;
-	pos->addr = addr + 1;
-	if (pos->x > 24)
-		newline(pos);
-}
-
-screenpos_t pos;
-
-void print_unsigned(unsigned int n, int radix)
-{
-	static char digit[] = "0123456789abcdef";
-	char buffer[8];
-	char *s = buffer;
-	do {
-		*s++ = digit[n % radix];
-		n = n / radix;
-	} while (n);
-	while (s > buffer)
-		print_char(&pos, *--s);
-}
-
-void print_int(int n, int radix)
-{
-	if (n < 0) {
-		print_char(&pos, '-');
-		n = -n;
-	}
-	print_unsigned(n, radix);
-}
-
-int myprintf(const char *fmt, ...)
-{
-	char c;
-	va_list ap;
-	va_start(ap, fmt);
-	while (c = *fmt++) {
-		if (c != '%') {
-			print_char(&pos, c);
-			continue;
-		}
-		if (c = *fmt++) {
-			if (c == 'd')
-				print_int(va_arg(ap, int), 10);
-			else if (c == 'u')
-				print_unsigned(va_arg(ap, unsigned), 10);
-			else if (c == 'x')
-				print_unsigned(va_arg(ap, unsigned), 16);
-			else
-				print_char(&pos, c);
-		}
-	}
-	va_end(ap);
-	return 0;
-}
-// end of print code
-#ifndef SYS_Sprite6
-void mySprite(char *addr, char *dest){ // draws sprite like sys function
-    int i,z,v;
-    z = 0;
-    v = 0;
-    i = 0;
-    while(addr[v]<128){
-        dest[z + i] = addr[v];
-        v++; i++;
-        if(i > 5){
-            i = 0;
-            z += 256;
-        }
-    }
-
-}
-#endif
 void mySpritet(char *addr, char *dest){ // draws sprite with transparencursorY for color 0
     int i,z,v;
     z = 0;
@@ -285,11 +138,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
             ptrChar = (char*)smarker;
             break;
 	}
-#ifdef SYS_Sprite6
 	SYS_Sprite6_v3(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
-#else
-	mySprite(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
-#endif
 }
 
 int main()
@@ -320,26 +169,19 @@ int main()
 	
 		SYS_SetMode(3);
 		leftMargin = (160 - 6*fieldsx)/2;
+		fgbg = FGBG; // 0x3f20
 		
-		fgbg = FGBG;
-		clear_screen(&pos);
+		_console_reset(FGBG);
+		_console_clear((char*)(8<<8), 0x030A, 16);
+		_console_printchars(0x030A, (char*)(8<<8)+6*1, "B", 1);
+		_console_printchars(0x200A, (char*)(8<<8)+6*2, "eginner", 7);
+		_console_printchars(0x030A, (char*)(8<<8)+6*10, "A", 1);
+		_console_printchars(0x200A, (char*)(8<<8)+6*11, "dvanced", 7);
+		_console_printchars(0x030A, (char*)(8<<8)+6*19, "E", 1);
+		_console_printchars(0x200A, (char*)(8<<8)+6*20, "xpert", 5);
 		
-		fgbg = 0x030A;
-		clear_lines(0,16);
-		pos.x = 1; pos.y = 0;
-		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-		myprintf("B");
-		fgbg = 0x0F0A;
-		myprintf("eginner ");
-		fgbg = 0x030A;
-		myprintf("A");
-		fgbg = 0x0F0A;
-		myprintf("dvanced ");
-		fgbg = 0x030A;
-		myprintf("E");
-		fgbg = 0x0F0A;
-		myprintf("xpert");
-		
+		console_state.fgbg = 0x030A;
+
 		markerCount = 0;
 		gameOver = 0;
 		newGame = 0;
@@ -547,20 +389,17 @@ int main()
 					}
 				break;
 			}
-			pos.x = 1;
-			pos.y = 1;
-			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-			myprintf("Bombs %d ", (numberbomb - markerCount));
-			
+
 			if(firstClick) seconds = (_clock() - ticks)/60;
 
-			pos.x = 22;
-			pos.y = 1;
-			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-			if(seconds<10) myprintf("0");			
-			if(seconds<100) myprintf("0");			
-			myprintf("%d", seconds);			
-			
+    		_console_printchars(0x020A, (char*)(8*2<<8)+6*1, "Bombs", 5);
+			console_state.fgbg = 0x020A;
+			console_state.cy = 1;
+			console_state.cx = 7;
+        	cprintf("%2d", numberbomb - markerCount);
+			console_state.cx = 21;
+		    cprintf("%4d", seconds);
+
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)) gameOver = 1;
 			
 			// i = 500; while((serialRaw != 0xFF) & (i>0)) {i--;}
@@ -568,25 +407,19 @@ int main()
 		}
 		// game end
 		if(!newGame){
-			fgbg = 0x0F0A;
-			clear_lines(0,16);
-			pos.x = 0;
-			pos.y = 0;
-			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
-				myprintf("YOU are the winner!");
+				_console_clear((char*)(8<<8), 0x01c, 16);
+				_console_printchars(0x031c, (char*)(8+8*0<<8)+6*3, "YOU are the winner!", 19);
+				_console_printchars(0x031c, (char*)(8+8*1<<8)+6*1, "Hit any key for new game", 24);
 			}else{
-				myprintf("You have lost");
+				_console_clear((char*)(8<<8), 0x0f03, 16);
+				_console_printchars(0x0f03, (char*)(8+8*0<<8)+6*2, ">>> You have lost <<<", 21);
+				_console_printchars(0x0f03, (char*)(8+8*1<<8)+6*1, "Hit any key for new game", 24);
 			}
-			pos.x = 0;
-			pos.y = 1;
-			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
-			myprintf("Hit any key for new game");
+
 			while(serialRaw == 0xFF) {}
 			while(serialRaw != 0xFF) {}
 		}
 	}
-	
     return 0;
-
 }
