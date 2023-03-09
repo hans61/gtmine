@@ -36,7 +36,7 @@ Game controls:
 
 ## use SYS_Sprite6_v3
 
-To use SYS_Sprite6_v3 it must be added glcc.To use SYS_Sprite6_v3, it must be added glcc. I have added the following code to these two files:
+To use SYS_Sprite6_v3, it must be added glcc. I have added the following code to these two files:
 
 gigatron-lcc/gigatron/libc/gigatron.s
 
