@@ -20,7 +20,7 @@ https://github.com/lb3361/gigatron-lcc
 
 ## My Version
 
-![gtmine for Gigatron](picture/gtmine-expert.jpg)
+![gtmine for Gigatron](picture/gtmine.jpg)
 
 Game controls:
 
