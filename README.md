@@ -68,4 +68,12 @@ After that, the glcc must be rebuilt once again.
 /gigatron-lcc$ suso make clean
 /gigatron-lcc$ suso make install
 ```
+The game is created with:
 
+```
+/gtmine$ make gtmine.gt1
+```
+or
+```
+/gtmine$ glcc gtmine.c -map=32k -o gtmine.gt1
+```
