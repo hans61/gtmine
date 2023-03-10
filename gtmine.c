@@ -5,7 +5,6 @@
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
-//#define FGBG 0x3f20
 #define FGBG 0x3f38
 
 #define MAXX 26
@@ -165,7 +164,7 @@ int main()
 
 	SYS_SetMode(1);
 
-	while(1){
+	for(;;){
 		SYS_SetMode(1975);        // faster calculation of the playing field
 	
 		leftMargin = (160 - 6*fieldsX)/2;
@@ -186,7 +185,6 @@ int main()
 		newGame = 0;
 		firstClick = 0;
 		seconds = 0;
-		// qmax = 0;
 		revealedFields = 0;
 	
 		for( y=0; y<fieldsY; y++ ){
@@ -250,13 +248,15 @@ int main()
 						cursorY++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
-					break;
+				buttonState = 0xff;
+				break;
 				case BUTTON_UP: // up
 					if(cursorY > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY--;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+				buttonState = 0xff;
 				break;
 				case BUTTON_LEFT: // left
 					if(cursorX > 0){
@@ -264,6 +264,7 @@ int main()
 						cursorX--;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+				buttonState = 0xff;
 				break;
 				case BUTTON_RIGHT: // right
 					// display for debugging
@@ -272,7 +273,60 @@ int main()
 						cursorX++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+				buttonState = 0xff;
 				break;
+
+				// case BUTTON_START:  // blocked software reset
+				case 'n': // start new game
+				case 'N':
+					gameOver = 1;
+					newGame = 1;
+				buttonState = 0xff;
+				break;
+
+				case 'b': // new game beginner
+				case 'B':
+					gameOver = 1;
+					newGame = 1;
+					numberBomb = 10;
+					fieldsX = 9;
+					fieldsY = 9;
+					topMargin = 35;
+				buttonState = 0xff;
+				break;
+				case 'a': // new game advanced
+				case 'A':
+					gameOver = 1;
+					newGame = 1;
+					numberBomb = 40;
+					fieldsX = 16;
+					fieldsY = 16;
+					topMargin = 28;
+				buttonState = 0xff;
+				break;
+
+				case 'e': // new game expert
+				case 'E':
+					gameOver = 1;
+					newGame = 1;
+					numberBomb = 88;
+					fieldsX = 26;
+					fieldsY = 17;
+					topMargin = 25;
+				buttonState = 0xff;
+				break;
+
+				case 'd': // debug show field, uncover
+				case 'D':
+					for( y=0; y<fieldsY; y++ ){
+						for( x=0; x<fieldsX; x++ ){
+							printSprite((field[y][x] & 0x0F), x, y);
+						}
+					}
+					gameOver = 1;
+				buttonState = 0xff;
+				break;
+
 				case BUTTON_B:
 				case 0x20: // set,unset marker with space
 					if((field[cursorY][cursorX] & BHIDDEN) == BHIDDEN){      // only on covered fields
@@ -288,49 +342,9 @@ int main()
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+				buttonState = 0xff;
 				break;
-				case 'n': // start new game
-				case 'N':
-				case BUTTON_START:
-					gameOver = 1;
-					newGame = 1;
-				break;
-				case 'b': // new game beginner
-				case 'B':
-					gameOver = 1;
-					newGame = 1;
-					numberBomb = 10;
-					fieldsX = 9;
-					fieldsY = 9;
-					topMargin = 35;
-				break;
-				case 'a': // new game advanced
-				case 'A':
-					gameOver = 1;
-					newGame = 1;
-					numberBomb = 40;
-					fieldsX = 16;
-					fieldsY = 16;
-					topMargin = 28;
-				break;
-				case 'e': // new game expert
-				case 'E':
-					gameOver = 1;
-					newGame = 1;
-					numberBomb = 88;
-					fieldsX = 26;
-					fieldsY = 17;
-					topMargin = 25;
-				break;
-				case 'd': // debug show field, uncover
-				case 'D':
-					for( y=0; y<fieldsY; y++ ){
-						for( x=0; x<fieldsX; x++ ){
-							printSprite((field[y][x] & 0x0F), x, y);
-						}
-					}
-					gameOver = 1;
-				break;
+
 				case BUTTON_A:
 				case 0x0A: // uncover game field with enter key
 					if(field[cursorY][cursorX] < 0x10) continue;
@@ -392,9 +406,9 @@ int main()
 						}
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin);
 					}
+				buttonState = 0xff;
 				break;
 			}
-			buttonState = 0xff;
 
 			if(firstClick) seconds = (_clock() - ticks)/60;
 
@@ -424,5 +438,5 @@ int main()
 			while(serialRaw != 0xFF) {}
 		}
 	}
-    return 0;
+    //return 0;
 }
