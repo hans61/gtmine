@@ -6,7 +6,7 @@
 
 #define SYS_Sprite6
 
-#define FGBG 0x3f20
+#define FGBG 0x3f38
 
 #define MAXX 26
 #define MAXY 17
@@ -329,15 +329,15 @@ int main()
 		pos.x = 1; pos.y = 0;
 		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 		myprintf("B");
-		fgbg = 0x0F0A;
+		fgbg = 0x200A;
 		myprintf("eginner ");
 		fgbg = 0x030A;
 		myprintf("A");
-		fgbg = 0x0F0A;
+		fgbg = 0x200A;
 		myprintf("dvanced ");
 		fgbg = 0x030A;
 		myprintf("E");
-		fgbg = 0x0F0A;
+		fgbg = 0x200A;
 		myprintf("xpert");
 		
 		markerCount = 0;
@@ -409,13 +409,15 @@ int main()
 						cursorY++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
-					break;
+					buttonState = 0xff;
+				break;
 				case BUTTON_UP: // up
 					if(cursorY > 0){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY--;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+					buttonState = 0xff;
 				break;
 				case BUTTON_LEFT: // left
 					if(cursorX > 0){
@@ -423,6 +425,7 @@ int main()
 						cursorX--;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+					buttonState = 0xff;
 				break;
 				case BUTTON_RIGHT: // right
 					// display for debugging
@@ -431,6 +434,7 @@ int main()
 						cursorX++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+					buttonState = 0xff;
 				break;
 				case BUTTON_B:
 				case 0x20: // set,unset marker with space
@@ -445,12 +449,14 @@ int main()
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
 					}
+					buttonState = 0xff;
 				break;
+				// case BUTTON_START:
 				case 'n': // start new game
 				case 'N':
-				case BUTTON_START:
 					gameOver = 1;
 					newGame = 1;
+					buttonState = 0xff;
 				break;
 				case 'b': // new game beginner
 				case 'B':
@@ -460,6 +466,7 @@ int main()
 					fieldsx = 9;
 					fieldsy = 9;
 					topMargin = 35;
+					buttonState = 0xff;
 				break;
 				case 'a': // new game advanced
 				case 'A':
@@ -469,6 +476,7 @@ int main()
 					fieldsx = 16;
 					fieldsy = 16;
 					topMargin = 28;
+					buttonState = 0xff;
 				break;
 				case 'e': // new game expert
 				case 'E':
@@ -478,6 +486,7 @@ int main()
 					fieldsx = 26;
 					fieldsy = 17;
 					topMargin = 25;
+					buttonState = 0xff;
 				break;
 				case 'd': // debug show field, uncover
 				case 'D':
@@ -487,6 +496,7 @@ int main()
 						}
 					}
 					gameOver = 1;
+					buttonState = 0xff;
 				break;
 				case BUTTON_A:
 				case 0x0A: // uncover game field with enter key
@@ -514,11 +524,12 @@ int main()
 								qptr = 0;
 								queue[qptr] = (cursorY<<8) + cursorX;
 								qptr++;
-								while(qptr>0){
+								while(qptr>0){                       // loop automatic uncovering
 									qptr--;
 									ty = queue[qptr]>>8;
 									tx = queue[qptr] & 0xFF;
 									if(field[ty][tx] > 0x0F){
+										if(field[ty][tx] > 0x1F) markerCount--; // remove incorrect marker
 										revealedFields++;
 										field[ty][tx] = field[ty][tx] & 0x0F;
 										printSprite(field[ty][tx], tx, ty);
@@ -530,10 +541,11 @@ int main()
 											x1 = tx + x; y1 = ty + y;
 											if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
 												// field lies in the array and is not uncovered
-												field[y1][x1] = field[y1][x1] & 0x0F; // uncover field
-												printSprite(field[y1][x1], x1, y1);   // draw revealed field
+												if(field[y1][x1] > 0x1F) markerCount--;  // remove incorrect marker
+												field[y1][x1] = field[y1][x1] & 0x0F;    // uncover field
+												printSprite(field[y1][x1], x1, y1);      // draw revealed field
 												revealedFields++;
-												if(field[y1][x1] == SFREE){ // field has no neighbor bombs, add to queue
+												if(field[y1][x1] == SFREE){              // field has no neighbor bombs, add to queue
 													queue[qptr] = (y1<<8) + x1;
 													qptr++;
 												}
@@ -545,6 +557,7 @@ int main()
 						}
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin);
 					}
+					buttonState = 0xff;
 				break;
 			}
 			pos.x = 1;
@@ -563,8 +576,6 @@ int main()
 			
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)) gameOver = 1;
 			
-			// i = 500; while((serialRaw != 0xFF) & (i>0)) {i--;}
-			_wait(5);
 		}
 		// game end
 		if(!newGame){
