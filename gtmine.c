@@ -65,9 +65,7 @@ const char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,5
 const char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
 
 
-int leftMargin;
-int fgbg;
-fgbg = FGBG;
+char leftMargin;
 char topMargin;
 
 void mySpritet(char *addr, char *dest){ // draws sprite with transparencursorY for color 0
@@ -146,9 +144,9 @@ int main()
     
     unsigned int ticks;
     int i, x, y, x1, y1, tx, ty; // help variables
-    char fieldsx;             	 // width of the playing field
-    char fieldsy;             	 // height of the playing field
-    char numberbomb;          	 // number of bombs
+    char fieldsX;             	 // width of the playing field
+    char fieldsY;             	 // height of the playing field
+    char numberBomb;          	 // number of bombs
 	char gameOver;	             // flag, end of game reached
 	char newGame;	 			 // Flag, start new game without closing the old one
 	char firstClick;             // Flag for start of the clock
@@ -157,20 +155,21 @@ int main()
 	char markerCount;         	 // counter for marked fields
 	char revealedFields;      	 // counter for revealed fields
 	unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
-	char qptr;                	 // pointer to queue
+	char queuePointer;           // pointer to queue
     char field[MAXY][MAXX];  	 // byte array for playing field, lower nibble sprite id, upper nibble flags
     
-	numberbomb = 10;
-	fieldsx = 9;
-	fieldsy = 9;
+	numberBomb = 10;
+	fieldsX = 9;
+	fieldsY = 9;
 	topMargin = 35;
 
+	SYS_SetMode(1);
+
 	while(1){
+		SYS_SetMode(1975);        // faster calculation of the playing field
 	
-		SYS_SetMode(3);
-		leftMargin = (160 - 6*fieldsx)/2;
-		fgbg = FGBG; // 0x3f20
-		
+		leftMargin = (160 - 6*fieldsX)/2;
+        // output top line		
 		_console_reset(FGBG);
 		_console_clear((char*)(8<<8), 0x030A, 16);
 		_console_printchars(0x030A, (char*)(8<<8)+6*1, "B", 1);
@@ -190,8 +189,8 @@ int main()
 		// qmax = 0;
 		revealedFields = 0;
 	
-		for( y=0; y<fieldsy; y++ ){
-			for( x=0; x<fieldsx; x++ ){
+		for( y=0; y<fieldsY; y++ ){
+			for( x=0; x<fieldsX; x++ ){
 				// field[y][x] = SFREE;
 				field[y][x] = BHIDDEN;
 				printSprite(field[y][x], x, y);
@@ -200,32 +199,32 @@ int main()
 	
 		i = 0; // bomb counter temp
 		// setting the bombs in the field
-		while(i < numberbomb){
-			x = rand() % (fieldsx-1);
-			y = rand() % (fieldsy-1);
+		while(i < numberBomb){
+			x = rand() % (fieldsX-1);
+			y = rand() % (fieldsY-1);
 			if(field[y][x] != (SBOMB | BHIDDEN)){ // field is not a bomb, bomb set
 				i++;                              // add bomb
 				field[y][x] = SBOMB | BHIDDEN;    // set marker for bomb
 			}
 		}
 	
-		for( y=0; y<fieldsy; y++ ){
-			for( x=0; x<fieldsx; x++ ){
+		for( y=0; y<fieldsY; y++ ){
+			for( x=0; x<fieldsX; x++ ){
 				
 				// count neighboring bombs
 				if(field[y][x] != (SBOMB | BHIDDEN)){
 					// observe edges
-					if(x < fieldsx-1 ){ // right edge
+					if(x < fieldsX-1 ){ // right edge
 						if(field[y][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // right
-						if(y < fieldsy-1 ) if(field[y+1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom right
+						if(y < fieldsY-1 ) if(field[y+1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom right
 						if(y > 0 ) if(field[y-1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top right
 					}
 					if(x > 0 ){ // left edge
 						if(field[y][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // left
-						if(y < fieldsy-1 ) if(field[y+1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom left
+						if(y < fieldsY-1 ) if(field[y+1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom left
 						if(y > 0 ) if(field[y-1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top left
 					}
-					if(y < fieldsy-1 ){
+					if(y < fieldsY-1 ){
 						if(field[y+1][x] == (SBOMB | BHIDDEN)) field[y][x]++;                      // bottom
 					}
 					if(y > 0 ) if(field[y-1][x] == (SBOMB | BHIDDEN)) field[y][x]++;               // top
@@ -234,7 +233,7 @@ int main()
 			}
 		}
 	
-		SYS_SetMode(2);
+		SYS_SetMode(-1);   // return to the original video mode
 	
 		cursorX = 0;
 		cursorY = 0;
@@ -246,7 +245,7 @@ int main()
 			switch(buttonState) {
 			//switch(buttonRaw) {
 				case BUTTON_DOWN: // down
-					if(cursorY < fieldsy-1){
+					if(cursorY < fieldsY-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorY++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
@@ -268,7 +267,7 @@ int main()
 				break;
 				case BUTTON_RIGHT: // right
 					// display for debugging
-					if(cursorX < fieldsx-1){
+					if(cursorX < fieldsX-1){
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						cursorX++;
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
@@ -281,8 +280,10 @@ int main()
 							field[cursorY][cursorX] = field[cursorY][cursorX] & 0x1F;
 							markerCount--;
 						}else{
-							field[cursorY][cursorX] = field[cursorY][cursorX] | 0x20;
-							markerCount++;
+						    if(markerCount<numberBomb){                                // only so many as bombs
+								field[cursorY][cursorX] = field[cursorY][cursorX] | 0x20;
+								markerCount++;
+							}
 						}
 						printSprite((field[cursorY][cursorX]), cursorX, cursorY);
 						mySpritet((char*)scursor, (char*)(cursorY*6+topMargin<<8)+6*cursorX+leftMargin );
@@ -298,33 +299,33 @@ int main()
 				case 'B':
 					gameOver = 1;
 					newGame = 1;
-					numberbomb = 10;
-					fieldsx = 9;
-					fieldsy = 9;
+					numberBomb = 10;
+					fieldsX = 9;
+					fieldsY = 9;
 					topMargin = 35;
 				break;
 				case 'a': // new game advanced
 				case 'A':
 					gameOver = 1;
 					newGame = 1;
-					numberbomb = 40;
-					fieldsx = 16;
-					fieldsy = 16;
+					numberBomb = 40;
+					fieldsX = 16;
+					fieldsY = 16;
 					topMargin = 28;
 				break;
 				case 'e': // new game expert
 				case 'E':
 					gameOver = 1;
 					newGame = 1;
-					numberbomb = 88;
-					fieldsx = 26;
-					fieldsy = 17;
+					numberBomb = 88;
+					fieldsX = 26;
+					fieldsY = 17;
 					topMargin = 25;
 				break;
 				case 'd': // debug show field, uncover
 				case 'D':
-					for( y=0; y<fieldsy; y++ ){
-						for( x=0; x<fieldsx; x++ ){
+					for( y=0; y<fieldsY; y++ ){
+						for( x=0; x<fieldsX; x++ ){
 							printSprite((field[y][x] & 0x0F), x, y);
 						}
 					}
@@ -342,25 +343,28 @@ int main()
 							// game over
 							gameOver = 1;
 							field[cursorY][cursorX] = SBOMBTRIGGERED;
-							for( y=0; y<fieldsy; y++ ){              // uncover all hidden fields
-								for( x=0; x<fieldsx; x++ ){
+							for( y=0; y<fieldsY; y++ ){              // uncover all hidden fields
+								for( x=0; x<fieldsX; x++ ){
 									printSprite((field[y][x] & 0x0F), x, y);
 								}
 							}
 						}else{ // no bomb in the field
+						    if(field[ty][tx] > 0x1F) markerCount--;  // remove incorrect marker
 							field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0F;
 							printSprite(field[cursorY][cursorX], cursorX, cursorY);
 							revealedFields++;
 							if(field[cursorY][cursorX] == SFREE) {
 								// field is empty, adjacent fields can be uncovered
-								qptr = 0;
-								queue[qptr] = (cursorY<<8) + cursorX;
-								qptr++;
-								while(qptr>0){
-									qptr--;
-									ty = queue[qptr]>>8;
-									tx = queue[qptr] & 0xFF;
+								queuePointer = 0;
+								queue[queuePointer] = (cursorY<<8) + cursorX;
+								queuePointer++;
+								while(queuePointer>0){
+									queuePointer--;
+									ty = queue[queuePointer]>>8;
+									tx = queue[queuePointer] & 0xFF;
 									if(field[ty][tx] > 0x0F){
+										if(field[ty][tx] > 0x1F) markerCount--;  // remove incorrect marker
+
 										revealedFields++;
 										field[ty][tx] = field[ty][tx] & 0x0F;
 										printSprite(field[ty][tx], tx, ty);
@@ -370,14 +374,15 @@ int main()
 										for(x = -1; x < 2; x++){
 											// loop adjacent fields
 											x1 = tx + x; y1 = ty + y;
-											if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
+											if((x1 < fieldsX) && (x1 >= 0) && (y1 < fieldsY) && (y1 >= 0) && (field[y1][x1]>0x0F)){
 												// field lies in the array and is not uncovered
-												field[y1][x1] = field[y1][x1] & 0x0F; // uncover field
-												printSprite(field[y1][x1], x1, y1);   // draw revealed field
+												if(field[y1][x1] > 0x1F) markerCount--;  // remove incorrect marker
+												field[y1][x1] = field[y1][x1] & 0x0F;    // uncover field
+												printSprite(field[y1][x1], x1, y1);      // draw revealed field
 												revealedFields++;
-												if(field[y1][x1] == SFREE){ // field has no neighbor bombs, add to queue
-													queue[qptr] = (y1<<8) + x1;
-													qptr++;
+												if(field[y1][x1] == SFREE){              // field has no neighbor bombs, add to queue
+													queue[queuePointer] = (y1<<8) + x1;
+													queuePointer++;
 												}
 											}
 										}
@@ -389,6 +394,7 @@ int main()
 					}
 				break;
 			}
+			buttonState = 0xff;
 
 			if(firstClick) seconds = (_clock() - ticks)/60;
 
@@ -396,18 +402,15 @@ int main()
 			console_state.fgbg = 0x020A;
 			console_state.cy = 1;
 			console_state.cx = 7;
-        	cprintf("%2d", numberbomb - markerCount);
+        	cprintf("%2d", numberBomb - markerCount);
 			console_state.cx = 21;
 		    cprintf("%4d", seconds);
 
-			if((revealedFields+numberbomb)==(fieldsx*fieldsy)) gameOver = 1;
-			
-			// i = 500; while((serialRaw != 0xFF) & (i>0)) {i--;}
-			_wait(5);
+			if((revealedFields+numberBomb)==(fieldsX*fieldsY)) gameOver = 1;
 		}
 		// game end
 		if(!newGame){
-			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
+			if((revealedFields+numberBomb)==(fieldsX*fieldsY)){
 				_console_clear((char*)(8<<8), 0x01c, 16);
 				_console_printchars(0x031c, (char*)(8+8*0<<8)+6*3, "YOU are the winner!", 19);
 				_console_printchars(0x031c, (char*)(8+8*1<<8)+6*1, "Hit any key for new game", 24);
