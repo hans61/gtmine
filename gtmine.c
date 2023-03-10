@@ -316,9 +316,12 @@ int main()
 	fieldsy = 9;
 	topMargin = 35;
 
+	SYS_SetMode(1);
+
 	while(1){
 	
-		SYS_SetMode(3);
+    	SYS_SetMode(1975);
+
 		leftMargin = (160 - 6*fieldsx)/2;
 		
 		fgbg = FGBG;
@@ -392,7 +395,7 @@ int main()
 			}
 		}
 	
-		SYS_SetMode(2);
+		SYS_SetMode(-1);
 	
 		cursorX = 0;
 		cursorY = 0;
