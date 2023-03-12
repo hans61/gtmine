@@ -233,7 +233,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
 {
 	char* ptrChar;
 	int sprnum;
-	sprnum = val & 0x0F;
+	sprnum = val & 0x0f;
 	if(val >= BHIDDEN) sprnum = SHIDDEN;
 	if(val >= BMARKER) sprnum = SMARKER;
 	ptrChar = (char*)scursor;		
@@ -320,20 +320,20 @@ int main()
 		fgbg = FGBG;
 		clear_screen(&pos);
 		
-		fgbg = 0x030A;
+		fgbg = 0x030a;
 		clear_lines(0,16);
 		pos.x = 1; pos.y = 0;
 		pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 		myprintf("B");
-		fgbg = 0x200A;
+		fgbg = 0x200a;
 		myprintf("eginner ");
-		fgbg = 0x030A;
+		fgbg = 0x030a;
 		myprintf("A");
-		fgbg = 0x200A;
+		fgbg = 0x200a;
 		myprintf("dvanced ");
-		fgbg = 0x030A;
+		fgbg = 0x030a;
 		myprintf("E");
-		fgbg = 0x200A;
+		fgbg = 0x200a;
 		myprintf("xpert");
 		
 		markerCount = 0;
@@ -436,7 +436,7 @@ int main()
 				case 0x20: // set,unset marker with space
 					if((field[cursorY][cursorX] & BHIDDEN) == BHIDDEN){      // only on covered fields
 						if((field[cursorY][cursorX] & BMARKER) == BMARKER){
-							field[cursorY][cursorX] = field[cursorY][cursorX] & 0x1F;
+							field[cursorY][cursorX] = field[cursorY][cursorX] & 0x1f;
 							markerCount--;
 						}else{
 							field[cursorY][cursorX] = field[cursorY][cursorX] | 0x20;
@@ -488,31 +488,31 @@ int main()
 				case 'D':
 					for( y=0; y<fieldsy; y++ ){
 						for( x=0; x<fieldsx; x++ ){
-							printSprite((field[y][x] & 0x0F), x, y);
+							printSprite((field[y][x] & 0x0f), x, y);
 						}
 					}
 					gameOver = 1;
 					buttonState = 0xff;
 				break;
 				case BUTTON_A:
-				case 0x0A: // uncover game field with enter key
+				case 0x0a: // uncover game field with enter key
 					if(field[cursorY][cursorX] < 0x10) continue;
 					if(firstClick == 0){
 						firstClick = 1;
 						ticks = _clock();
 					}
 					if(field[cursorY][cursorX] < 0x20){              // marker protects field
-						if((field[cursorY][cursorX] & 0x0F) == SBOMB){
+						if((field[cursorY][cursorX] & 0x0f) == SBOMB){
 							// game over
 							gameOver = 1;
 							field[cursorY][cursorX] = SBOMBTRIGGERED;
 							for( y=0; y<fieldsy; y++ ){              // uncover all hidden fields
 								for( x=0; x<fieldsx; x++ ){
-									printSprite((field[y][x] & 0x0F), x, y);
+									printSprite((field[y][x] & 0x0f), x, y);
 								}
 							}
 						}else{ // no bomb in the field
-							field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0F;
+							field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0f;
 							printSprite(field[cursorY][cursorX], cursorX, cursorY);
 							revealedFields++;
 							if(field[cursorY][cursorX] == SFREE) {
@@ -523,11 +523,11 @@ int main()
 								while(qptr>0){                       // loop automatic uncovering
 									qptr--;
 									ty = queue[qptr]>>8;
-									tx = queue[qptr] & 0xFF;
-									if(field[ty][tx] > 0x0F){
-										if(field[ty][tx] > 0x1F) markerCount--; // remove incorrect marker
+									tx = queue[qptr] & 0xff;
+									if(field[ty][tx] > 0x0f){
+										if(field[ty][tx] > 0x1f) markerCount--; // remove incorrect marker
 										revealedFields++;
-										field[ty][tx] = field[ty][tx] & 0x0F;
+										field[ty][tx] = field[ty][tx] & 0x0f;
 										printSprite(field[ty][tx], tx, ty);
 									}
 									// search neighboring fields
@@ -535,10 +535,10 @@ int main()
 										for(x = -1; x < 2; x++){
 											// loop adjacent fields
 											x1 = tx + x; y1 = ty + y;
-											if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0F)){
+											if((x1 < fieldsx) && (x1 >= 0) && (y1 < fieldsy) && (y1 >= 0) && (field[y1][x1]>0x0f)){
 												// field lies in the array and is not uncovered
-												if(field[y1][x1] > 0x1F) markerCount--;  // remove incorrect marker
-												field[y1][x1] = field[y1][x1] & 0x0F;    // uncover field
+												if(field[y1][x1] > 0x1f) markerCount--;  // remove incorrect marker
+												field[y1][x1] = field[y1][x1] & 0x0f;    // uncover field
 												printSprite(field[y1][x1], x1, y1);      // draw revealed field
 												revealedFields++;
 												if(field[y1][x1] == SFREE){              // field has no neighbor bombs, add to queue
@@ -577,7 +577,7 @@ int main()
 		}
 		// game end
 		if(!newGame){
-			pos.x = 0;
+			pos.x = 2;
 			pos.y = 0;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
@@ -589,12 +589,12 @@ int main()
 				clear_lines(0,16);
 				myprintf("You have lost");
 			}
-			pos.x = 0;
+			pos.x = 1;
 			pos.y = 1;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			myprintf("Hit any key for new game");
-			while(serialRaw == 0xFF) {}
-			while(serialRaw != 0xFF) {}
+			while(serialRaw == 0xff) {}
+			while(serialRaw != 0xff) {}
 		}
 	}
 	
