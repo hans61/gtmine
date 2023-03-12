@@ -563,7 +563,7 @@ int main()
 			
 			seconds = (_clock() - ticks) / 60;
 			if(!firstClick) seconds = 0;
-			if(seconds>1000) seconds = 999;
+			if(seconds>999) seconds = 999;
 
 			pos.x = 22;
 			pos.y = 1;
