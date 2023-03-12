@@ -1,35 +1,20 @@
 
-import fnmatch
 
-# data fragments that need to be placed at specific addresses:
-place_at = [ ('*', 'sfree', 0x20a0),
-             ('*', 's1', 0x20d0),
-             ('*', 's2', 0x21a0),
-             ('*', 's3', 0x21d0),
-             ('*', 's4', 0x22a0),
-             ('*', 's5', 0x22d0),
-             ('*', 's6', 0x23a0),
-             ('*', 's7', 0x23d0),
-             ('*', 's8', 0x24a0),
-             ('*', 'sbomb', 0x24d0),
-             ('*', 'sbombtriggered', 0x25a0),
-             ('*', 'scursor', 0x25d0),
-             ('*', 'shidden', 0x26a0),
-             ('*', 'smarker', 0x26d0), ]
+# Placement overrides
+placements = [
+    # Variables named "s*" defined in "gtmine.c" cannot cross page boundaries
+    ('gtmine.c', 'NOHOP', 's*'), 
+] 
 
-# This augments the module definition with placement directives
 def map_place(filename, fragments):
     directives = []
-    for spec in place_at:
-        if fnmatch.fnmatch(filename,spec[0]) and spec[1] in fragments:
-            directive = ('PLACE', spec[1], spec[2], None)
-            directives.append(directive)
-    if filename == 'sprite1.c':
-        print(filename, fragments, directives)
+    for placement in placements:
+        if fnmatch.fnmatch(filename, placement[0]):
+            directives.append(placement[1:])
     return directives
-
 
 # Local Variables:
 # mode: python
 # indent-tabs-mode: ()
 # End:
+	
