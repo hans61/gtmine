@@ -135,7 +135,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
             ptrChar = (char*)smarker;
             break;
 	}
-	SYS_Sprite6_v3(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
+	SYS_Sprite6(ptrChar, (char*)(yy*6+topMargin<<8)+6*xx+leftMargin);
 }
 
 int main()
@@ -145,12 +145,12 @@ int main()
     int i, x, y, x1, y1, tx, ty; // help variables
     char fieldsX;             	 // width of the playing field
     char fieldsY;             	 // height of the playing field
-    char numberBomb;          	 // number of bombs
 	char gameOver;	             // flag, end of game reached
 	char newGame;	 			 // Flag, start new game without closing the old one
 	char firstClick;             // Flag for start of the clock
 	unsigned int seconds;        // elapsed seconds
     char cursorX, cursorY;       // cursor in the playing field	 
+    char numberBomb;          	 // number of bombs
 	char markerCount;         	 // counter for marked fields
 	char revealedFields;      	 // counter for revealed fields
 	unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
@@ -411,7 +411,7 @@ int main()
 			}
 
 			if(firstClick) seconds = (_clock() - ticks)/60;
-
+/*
     		_console_printchars(0x020A, (char*)(8*2<<8)+6*1, "Bombs", 5);
 			console_state.fgbg = 0x020A;
 			console_state.cy = 1;
@@ -419,7 +419,7 @@ int main()
         	cprintf("%2d", numberBomb - markerCount);
 			console_state.cx = 21;
 		    cprintf("%4d", seconds);
-
+*/
 			if((revealedFields+numberBomb)==(fieldsX*fieldsY)) gameOver = 1;
 		}
 		// game end
