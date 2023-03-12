@@ -561,7 +561,9 @@ int main()
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			myprintf("Bombs %d ", (numberbomb - markerCount));
 			
-			if(firstClick) seconds = (_clock() - ticks)/60;
+			seconds = (_clock() - ticks) / 60;
+			if(!firstClick) seconds = 0;
+			if(seconds>1000) seconds = 999;
 
 			pos.x = 22;
 			pos.y = 1;
@@ -575,14 +577,16 @@ int main()
 		}
 		// game end
 		if(!newGame){
-			fgbg = 0x0F0A;
-			clear_lines(0,16);
 			pos.x = 0;
 			pos.y = 0;
 			pos.addr = (char*)(videoTable[16*pos.y]<<8)+6*pos.x;
 			if((revealedFields+numberbomb)==(fieldsx*fieldsy)){
+				fgbg = 0x031c;
+				clear_lines(0,16);
 				myprintf("YOU are the winner!");
 			}else{
+				fgbg = 0x0f03;
+				clear_lines(0,16);
 				myprintf("You have lost");
 			}
 			pos.x = 0;
