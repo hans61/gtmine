@@ -410,8 +410,10 @@ int main()
 				break;
 			}
 
-			if(firstClick) seconds = (_clock() - ticks)/60;
-/*
+			seconds = (_clock() - ticks) / 60;
+			if(!firstClick) seconds = 0;
+			if(seconds>999) seconds = 999;
+
     		_console_printchars(0x020A, (char*)(8*2<<8)+6*1, "Bombs", 5);
 			console_state.fgbg = 0x020A;
 			console_state.cy = 1;
@@ -419,7 +421,6 @@ int main()
         	cprintf("%2d", numberBomb - markerCount);
 			console_state.cx = 21;
 		    cprintf("%4d", seconds);
-*/
 			if((revealedFields+numberBomb)==(fieldsX*fieldsY)) gameOver = 1;
 		}
 		// game end
