@@ -5,8 +5,6 @@
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
-#define FGBG 0x3f38
-
 #define MAXX 26
 #define MAXY 17
 
@@ -87,7 +85,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
 {
 	char* ptrChar;
 	int sprnum;
-	sprnum = val & 0x0F;
+	sprnum = val & 0x0f;
 	if(val >= BHIDDEN) sprnum = SHIDDEN;
 	if(val >= BMARKER) sprnum = SMARKER;
 	ptrChar = (char*)scursor;		
@@ -169,16 +167,16 @@ int main()
 	
 		leftMargin = (160 - 6*fieldsX)/2;
         // output top line		
-		_console_reset(FGBG);
-		_console_clear((char*)(8<<8), 0x030A, 16);
-		_console_printchars(0x030A, (char*)(8<<8)+6*1, "B", 1);
-		_console_printchars(0x200A, (char*)(8<<8)+6*2, "eginner", 7);
-		_console_printchars(0x030A, (char*)(8<<8)+6*10, "A", 1);
-		_console_printchars(0x200A, (char*)(8<<8)+6*11, "dvanced", 7);
-		_console_printchars(0x030A, (char*)(8<<8)+6*19, "E", 1);
-		_console_printchars(0x200A, (char*)(8<<8)+6*20, "xpert", 5);
+		_console_reset(0x3f38);
+		_console_clear((char*)(8<<8), 0x030a, 16);
+		_console_printchars(0x030a, (char*)(8<<8)+6*1, "B", 1);
+		_console_printchars(0x200a, (char*)(8<<8)+6*2, "eginner", 7);
+		_console_printchars(0x030a, (char*)(8<<8)+6*10, "A", 1);
+		_console_printchars(0x200a, (char*)(8<<8)+6*11, "dvanced", 7);
+		_console_printchars(0x030a, (char*)(8<<8)+6*19, "E", 1);
+		_console_printchars(0x200a, (char*)(8<<8)+6*20, "xpert", 5);
 		
-		console_state.fgbg = 0x030A;
+		console_state.fgbg = 0x030a;
 
 		markerCount = 0;
 		gameOver = 0;
@@ -320,7 +318,7 @@ int main()
 				case 'D':
 					for( y=0; y<fieldsY; y++ ){
 						for( x=0; x<fieldsX; x++ ){
-							printSprite((field[y][x] & 0x0F), x, y);
+							printSprite((field[y][x] & 0x0f), x, y);
 						}
 					}
 					gameOver = 1;
@@ -331,7 +329,7 @@ int main()
 				case 0x20: // set,unset marker with space
 					if((field[cursorY][cursorX] & BHIDDEN) == BHIDDEN){      // only on covered fields
 						if((field[cursorY][cursorX] & BMARKER) == BMARKER){
-							field[cursorY][cursorX] = field[cursorY][cursorX] & 0x1F;
+							field[cursorY][cursorX] = field[cursorY][cursorX] & 0x1f;
 							markerCount--;
 						}else{
 						    if(markerCount<numberBomb){                                // only so many as bombs
@@ -346,25 +344,25 @@ int main()
 				break;
 
 				case BUTTON_A:
-				case 0x0A: // uncover game field with enter key
+				case 0x0a: // uncover game field with enter key
 					if(field[cursorY][cursorX] < 0x10) continue;
 					if(firstClick == 0){
 						firstClick = 1;
 						ticks = _clock();
 					}
 					if(field[cursorY][cursorX] < 0x20){              // marker protects field
-						if((field[cursorY][cursorX] & 0x0F) == SBOMB){
+						if((field[cursorY][cursorX] & 0x0f) == SBOMB){
 							// game over
 							gameOver = 1;
 							field[cursorY][cursorX] = SBOMBTRIGGERED;
 							for( y=0; y<fieldsY; y++ ){              // uncover all hidden fields
 								for( x=0; x<fieldsX; x++ ){
-									printSprite((field[y][x] & 0x0F), x, y);
+									printSprite((field[y][x] & 0x0f), x, y);
 								}
 							}
 						}else{ // no bomb in the field
-						    if(field[ty][tx] > 0x1F) markerCount--;  // remove incorrect marker
-							field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0F;
+						    if(field[ty][tx] > 0x1f) markerCount--;  // remove incorrect marker
+							field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0f;
 							printSprite(field[cursorY][cursorX], cursorX, cursorY);
 							revealedFields++;
 							if(field[cursorY][cursorX] == SFREE) {
@@ -375,12 +373,12 @@ int main()
 								while(queuePointer>0){
 									queuePointer--;
 									ty = queue[queuePointer]>>8;
-									tx = queue[queuePointer] & 0xFF;
-									if(field[ty][tx] > 0x0F){
-										if(field[ty][tx] > 0x1F) markerCount--;  // remove incorrect marker
+									tx = queue[queuePointer] & 0xff;
+									if(field[ty][tx] > 0x0f){
+										if(field[ty][tx] > 0x1f) markerCount--;  // remove incorrect marker
 
 										revealedFields++;
-										field[ty][tx] = field[ty][tx] & 0x0F;
+										field[ty][tx] = field[ty][tx] & 0x0f;
 										printSprite(field[ty][tx], tx, ty);
 									}
 									// search neighboring fields
@@ -388,10 +386,10 @@ int main()
 										for(x = -1; x < 2; x++){
 											// loop adjacent fields
 											x1 = tx + x; y1 = ty + y;
-											if((x1 < fieldsX) && (x1 >= 0) && (y1 < fieldsY) && (y1 >= 0) && (field[y1][x1]>0x0F)){
+											if((x1 < fieldsX) && (x1 >= 0) && (y1 < fieldsY) && (y1 >= 0) && (field[y1][x1]>0x0f)){
 												// field lies in the array and is not uncovered
-												if(field[y1][x1] > 0x1F) markerCount--;  // remove incorrect marker
-												field[y1][x1] = field[y1][x1] & 0x0F;    // uncover field
+												if(field[y1][x1] > 0x1f) markerCount--;  // remove incorrect marker
+												field[y1][x1] = field[y1][x1] & 0x0f;    // uncover field
 												printSprite(field[y1][x1], x1, y1);      // draw revealed field
 												revealedFields++;
 												if(field[y1][x1] == SFREE){              // field has no neighbor bombs, add to queue
@@ -414,8 +412,8 @@ int main()
 			if(!firstClick) seconds = 0;
 			if(seconds>999) seconds = 999;
 
-    		_console_printchars(0x020A, (char*)(8*2<<8)+6*1, "Bombs", 5);
-			console_state.fgbg = 0x020A;
+    		_console_printchars(0x020a, (char*)(8*2<<8)+6*1, "Bombs", 5);
+			console_state.fgbg = 0x020a;
 			console_state.cy = 1;
 			console_state.cx = 7;
         	cprintf("%2d", numberBomb - markerCount);
@@ -435,8 +433,8 @@ int main()
 				_console_printchars(0x0f03, (char*)(8+8*1<<8)+6*1, "Hit any key for new game", 24);
 			}
 
-			while(serialRaw == 0xFF) {}
-			while(serialRaw != 0xFF) {}
+			while(serialRaw == 0xff) {}
+			while(serialRaw != 0xff) {}
 		}
 	}
     //return 0;
