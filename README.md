@@ -22,7 +22,7 @@ https://github.com/lb3361/gigatron-lcc
 
 **!!! The game is still in development. The current version tested on real hardware is in the tested branch. !!!**
 
-![gtmine for Gigatron](picture/gtmine.jpg)
+![gtmine for Gigatron](picture/gtmine-advanced.jpg)
 
 Game controls:
 
