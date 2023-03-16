@@ -5,7 +5,7 @@
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
-#define MEM32
+#define MEM64
 
 // Game controller bits (actual controllers in kit have negative output)
 // +----------------------------------------+
