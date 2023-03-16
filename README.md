@@ -34,7 +34,7 @@ Game controls:
   - Beginner: key B
   - Advanced: key A
   - Expert: key E
-- Key D reveals the playing field. It is not a game function, but is used for debugging.
+  - ~~Key D reveals the playing field. It is not a game function, but is used for debugging.~~
 
 ## use SYS_Sprite6_v3
 
@@ -73,13 +73,10 @@ After that, the glcc must be rebuilt once again.
 The game is created with:
 
 ```
-/gtmine$ make gtmine.gt1
+/gtmine$ make
 ```
 or
 ```
-/gtmine$ glcc -map=32k gtmine.c -o gtmine.gt1
-```
-or for rom
-```
-/gtmine$ glcc -rom=v5a -map=32k gtmine.c -o gtmine.gt1
+/gtmine$ glcc -o gtmine32.gt1 gtmine32.c -map=32k,./gtmine32.ovl
+/gtmine$ glcc -o gtmine64.gt1 gtmine64.c -map=64k
 ```
