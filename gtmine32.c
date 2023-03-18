@@ -66,7 +66,10 @@ const char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,
 const char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};              // 8
 const char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};           // 9
 const char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};  // 10 [0x0a]
-const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b]
+//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b]
+//const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,35,35,35,35,250};                             // 11 [0x0b]
+//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,0,0,35,35,250};                             // 11 [0x0b]
+const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,35,35,35,35,250};                         // 11 [0x0b]
 const char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};         // 12 [0x0c]
 const char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
 
@@ -87,19 +90,6 @@ char leftMargin;
 unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
 char field[MAXY][MAXX];      // byte array for playing field, lower nibble sprite id, upper nibble flags
 unsigned int colors;
-unsigned int ticks;
-unsigned int seconds;        // elapsed seconds
-char cursorX, cursorY;       // cursor in the playing field
-char markerCount;            // counter for marked fields
-char revealedFields;         // counter for revealed fields
-char queuePointer;           // pointer to queue
-char gameOver;               // flag, end of game reached
-char newGame;                // Flag, start new game without closing the old one
-char firstClick;             // Flag for start of the clock
-
-int i, x, y, x1, y1, tx, ty; // help variables
-char buffer[8];
-
 
 void setLevel(struct game_level_s *data, levels level){
     switch(level)
@@ -206,7 +196,18 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
 
 int main()
 {
-
+	unsigned int ticks;
+	unsigned int seconds;        // elapsed seconds
+	char cursorX, cursorY;       // cursor in the playing field
+	char markerCount;            // counter for marked fields
+	char revealedFields;         // counter for revealed fields
+	char queuePointer;           // pointer to queue
+	char gameOver;               // flag, end of game reached
+	char newGame;                // Flag, start new game without closing the old one
+	char firstClick;             // Flag for start of the clock
+	
+	int i, x, y, x1, y1, tx, ty; // help variables
+	char buffer[8];
 
     setLevel(&game_level, BEGINNER);
 
