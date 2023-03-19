@@ -32,7 +32,7 @@ Game controls:
   - Beginner: key B
   - Advanced: key A
   - Expert: key E
-  - ~~Key D reveals the playing field. It is not a game function, but is used for debugging.~~
+  - Rotated with start on controller
 
 ## use SYS_Sprite6_v3
 
