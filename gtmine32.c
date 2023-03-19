@@ -5,7 +5,7 @@
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
-#define MEM32
+#define MEM32      // MEM32|MEM64 for 32k or 64k version
 
 // Game controller bits (actual controllers in kit have negative output)
 // +----------------------------------------+
@@ -26,16 +26,16 @@
 // It is an alternative to a recursive function.
 // I am afraid of stack problems with recursive functions.
 #define MAXQ 40
-#define REPETITION 6
+#define REPETITION 6 // speed for automatic cursor movement
 
 #ifdef MEM32
-	#define MAXX 26 // max 26
-	#define MAXY 17 // max 17
-	#define TOP 2
+    #define MAXX 26 // max 26
+    #define MAXY 17 // max 17
+    #define TOP 2
 #else
-	#define MAXX 26 // max 26
-	#define MAXY 17 // max 17
-	#define TOP 0
+    #define MAXX 26 // max 26
+    #define MAXY 17 // max 17
+    #define TOP 0
 #endif
 
 #define SFREE 0
@@ -67,12 +67,16 @@ const char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,
 const char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};              // 8
 const char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};           // 9
 const char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};  // 10 [0x0a]
-//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b] cursor open at 4 sides
-//const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,35,35,35,35,250};                             // 11 [0x0b] cursor right/left open
-//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,0,0,35,35,250};                             // 11 [0x0b] cursor top/bottom open
-const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,35,35,35,35,250};                         // 11 [0x0b] cursor closed
 const char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};         // 12 [0x0c]
 const char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
+const char bigcursor[]={35,35,35,35,35,35,35,35,
+                        35, 0, 0, 0, 0, 0, 0,35,
+                        35, 0, 0, 0, 0, 0, 0,35,
+                        35, 0, 0, 0, 0, 0, 0,35,
+                        35, 0, 0, 0, 0, 0, 0,35,
+                        35, 0, 0, 0, 0, 0, 0,35,
+                        35, 0, 0, 0, 0, 0, 0,35,
+                        35,35,35,35,35,35,35,35,250};                                                                                           // 11 [0x0b] cursor closed
 
 
 typedef enum {
@@ -85,11 +89,11 @@ struct game_level_s {
     char numberBomb, topMargin;
 } game_level;
 
-// register char leftMargin;
 __near char leftMargin;
 
 unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
 char field[MAXY][MAXX];      // byte array for playing field, lower nibble sprite id, upper nibble flags
+char backup[64];
 unsigned int colors;
 char bottonLevel;
 
@@ -108,11 +112,11 @@ void setLevel(struct game_level_s *data, levels level){
             (*data).fieldsY = MAXY;               // 17
             (*data).fields = MAXX * MAXY;         // 442
             (*data).numberBomb = MAXX * MAXY / 5; // 88
-#ifdef MEM32		
+#ifdef MEM32
             (*data).topMargin = 18;               // 1*8 (one lines text) + 2 + 8 = 18 (pixel + 8)
 #else
             (*data).topMargin = 17;               // 1*8 (one lines text) + 1 + 8 = 17 (pixel + 8)
-#endif		
+#endif
         break;
         default: // BEGINNER
             (*data).fieldsX = 9;
@@ -125,20 +129,35 @@ void setLevel(struct game_level_s *data, levels level){
 
 }
 
-void mySpritet(char *addr, char *dest){ // draws sprite with transparencursorY for color 0
-    int i,z,v;
-    z = 0;
-    v = 0;
-    i = 0;
-    while(addr[v]<128){
-        if(addr[v]>0) dest[z + i] = addr[v];
-        v++; i++;
-        if(i > 5){
-            i = 0;
-            z += 256;
+void printCursor(char *addr, char *dest){ //
+    int ii, zz, vv;
+    zz = vv = ii = 0;
+    while(addr[vv] < 128){
+        if(addr[vv] > 0){
+            backup[vv] = dest[zz + ii];
+            dest[zz + ii] = addr[vv];
+        }
+        vv++; ii++;
+        if(ii > 7){
+            ii = 0;
+            zz += 256;
         }
     }
+}
 
+void restoreCursor(char *addr, char *dest){ //
+    int ii, zz, vv;
+    zz = vv = ii = 0;
+    while(addr[vv] < 128){
+        if(addr[vv] > 0){
+            dest[zz + ii] = backup[vv];
+        }
+        vv++; ii++;
+        if(ii > 7){
+            ii = 0;
+            zz += 256;
+        }
+    }
 }
 
 void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy is the x,y position in the playfield
@@ -148,7 +167,7 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
     sprnum = val & 0x0f;
     if(val >= BHIDDEN) sprnum = SHIDDEN;
     if(val >= BMARKER) sprnum = SMARKER;
-    ptrChar = (char*)scursor;
+    ptrChar = (char*)sfree;
     switch(sprnum){
         case SFREE:
             ptrChar = (char*)sfree;
@@ -183,9 +202,6 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
         case SBOMBTRIGGERED:
             ptrChar = (char*)sbombtriggered;
             break;
-        case SCURSOR:
-            ptrChar = (char*)scursor;
-            break;
         case SHIDDEN:
             ptrChar = (char*)shidden;
             break;
@@ -198,30 +214,30 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
 
 int main()
 {
-	register char rep;
-	register unsigned int ticks;
-	register unsigned int seconds;        // elapsed seconds
-	register char cursorX, cursorY;       // cursor in the playing field
-	register char markerCount;            // counter for marked fields
-	register char revealedFields;         // counter for revealed fields
-	register char queuePointer;           // pointer to queue
-	register char gameOver;               // flag, end of game reached
-	register char newGame;                // Flag, start new game without closing the old one
-	register char firstClick;             // Flag for start of the clock
-	
-	register char i, x1, y1, tx, ty; // help variables
-	register int x, y; // help variables
-	__near char buffer[8];
-	//char c;
+    register char rep;
+    register unsigned int ticks;
+    register unsigned int seconds;        // elapsed seconds
+    register char cursorX, cursorY;       // cursor in the playing field
+    register char markerCount;            // counter for marked fields
+    register char revealedFields;         // counter for revealed fields
+    register char queuePointer;           // pointer to queue
+    register char gameOver;               // flag, end of game reached
+    register char newGame;                // Flag, start new game without closing the old one
+    register char firstClick;             // Flag for start of the clock
 
-	bottonLevel = BEGINNER;
+    register char i, x1, y1, tx, ty; // help variables
+    register int x, y; // help variables
+    __near char buffer[8];
+    //char c;
+
+    bottonLevel = BEGINNER;
     setLevel(&game_level, bottonLevel);
 
     SYS_SetMode(2);
 
     for(;;){
         //SYS_SetMode(1975);        // faster calculation of the playing field
-		videoTop_v5 = 224;
+        videoTop_v5 = 224;
 
         leftMargin = (160 - 6*game_level.fieldsX)/2;
 
@@ -282,7 +298,7 @@ int main()
             }
         }
 
-		// output info line
+        // output info line
         _console_clear((char*)((8+8*14)<<8), 0x030a, 8);
         _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*1, "B", 1);
         _console_printchars(0x200a, (char*)((8+8*14)<<8)+6*2, "eginner", 7);
@@ -292,31 +308,32 @@ int main()
         _console_printchars(0x200a, (char*)((8+8*14)<<8)+6*20, "xpert", 5);
 
         _console_clear((char*)((TOP+8+8*0)<<8), 0x030a, 8);
-		videoTop_v5 = 2 * TOP;
-		
+        _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*1, "Bombs", 5);
+        videoTop_v5 = 2 * TOP;
+
         cursorX = 0;
         cursorY = 0;
 
-        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8)+6*cursorX+leftMargin );
+        printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
 
         while(!gameOver){
-		
-			//c = serialRaw;
-			
-			switch(serialRaw) {
+
+            //c = serialRaw;
+
+            switch(serialRaw) {
                 case BUTTON_START:  // blocked software reset
-					bottonLevel++;
-					if(bottonLevel > EXPERT) bottonLevel = BEGINNER;
+                    bottonLevel++;
+                    if(bottonLevel > EXPERT) bottonLevel = BEGINNER;
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, bottonLevel);
-					while(serialRaw != 0xff) {}
-				break;
+                    while(serialRaw != 0xff) {}
+                break;
                 case 'n': // start new game
                 case 'N':
                     gameOver = 1;
                     newGame = 1;
-					while(serialRaw != 0xff) {}
+                    while(serialRaw != 0xff) {}
                 break;
 
                 case 'b': // new game beginner
@@ -324,14 +341,14 @@ int main()
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, BEGINNER);
-					while(serialRaw != 0xff) {}
+                    while(serialRaw != 0xff) {}
                 break;
                 case 'a': // new game advanced
                 case 'A':
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, ADVANCED);
-					while(serialRaw != 0xff) {}
+                    while(serialRaw != 0xff) {}
                 break;
 
                 case 'e': // new game expert
@@ -339,7 +356,7 @@ int main()
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, EXPERT);
-					while(serialRaw != 0xff) {}
+                    while(serialRaw != 0xff) {}
                 break;
                 case BUTTON_B:
                 case 0x20: // set,unset marker with space
@@ -353,10 +370,11 @@ int main()
                                 markerCount++;
                             }
                         }
+                        restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
                         printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-                        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8)+6*cursorX+leftMargin );
+                        printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
                     }
-					while(serialRaw != 0xff) {}
+                    while(serialRaw != 0xff) {}
                 break;
 
                 case BUTTON_A:
@@ -381,6 +399,7 @@ int main()
                             field[cursorY][cursorX] = field[cursorY][cursorX]& 0x0f;
                             printSprite(field[cursorY][cursorX], cursorX, cursorY);
                             revealedFields++;
+                            restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
                             if(field[cursorY][cursorX] == SFREE) {
                                 // field is empty, adjacent fields can be uncovered
                                 queuePointer = 0;
@@ -419,90 +438,89 @@ int main()
                                 }
                             }
                         }
-                        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8)+6*cursorX+leftMargin);
+                        printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
                     }
                 break;
-				default:
-					rep = 0;
-					if(serialRaw > 0xef) { // it is a controller key
-					
-						if( ((serialRaw ^ BUTTON_DOWN) && (BUTTON_DOWN ^ 0xff)) == 0 ){ // down
-							if(cursorY < game_level.fieldsY-1){
-								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-								cursorY++;
-								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-								rep = REPETITION;
-							}
-						}
-						if( ((serialRaw ^ BUTTON_UP) && (BUTTON_UP ^ 0xff)) == 0 ){ // up
-							if(cursorY > 0){
-								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-								cursorY--;
-								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-								rep = REPETITION;
-							}
-						}
-						if( ((serialRaw ^ BUTTON_LEFT) && (BUTTON_LEFT ^ 0xff)) == 0 ){ // left
-							if(cursorX > 0){
-								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-								cursorX--;
-								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-								rep = REPETITION;
-							}
-						}
-						if( ((serialRaw ^ BUTTON_RIGHT) && (BUTTON_RIGHT ^ 0xff) ) == 0 ){ // right
-							if(cursorX < game_level.fieldsX-1){
-								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-								cursorX++;
-								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-								rep = REPETITION;
-							}
-						}
-					
-						while((serialRaw != 0xff) && (rep > 0)) {
-							_wait(2);
-							rep--;
-						}
-					}
+                default:
+                    rep = 0;
+                    if(serialRaw > 0xef) { // it is a controller key
+
+                        if( ((serialRaw ^ BUTTON_DOWN) && (BUTTON_DOWN ^ 0xff)) == 0 ){ // down
+                            if(cursorY < game_level.fieldsY-1){
+                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                cursorY++;
+                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                rep = REPETITION;
+                            }
+                        }
+                        if( ((serialRaw ^ BUTTON_UP) && (BUTTON_UP ^ 0xff)) == 0 ){ // up
+                            if(cursorY > 0){
+                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                cursorY--;
+                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                rep = REPETITION;
+                            }
+                        }
+                        if( ((serialRaw ^ BUTTON_LEFT) && (BUTTON_LEFT ^ 0xff)) == 0 ){ // left
+                            if(cursorX > 0){
+                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                cursorX--;
+                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                rep = REPETITION;
+                            }
+                        }
+                        if( ((serialRaw ^ BUTTON_RIGHT) && (BUTTON_RIGHT ^ 0xff) ) == 0 ){ // right
+                            if(cursorX < game_level.fieldsX-1){
+                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                cursorX++;
+                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                                rep = REPETITION;
+                            }
+                        }
+
+                        while((serialRaw != 0xff) && (rep > 0)) {
+                            _wait(2);
+                            rep--;
+                        }
+                    }
 
             }
 
             // output of status line
-			if(seconds<999) seconds = (_clock() - ticks) / 60; else seconds = 999;
+            if(seconds<999) seconds = (_clock() - ticks) / 60; else seconds = 999;
             if(!firstClick) seconds = 0;
             i = game_level.numberBomb - markerCount;
-            _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*1, "Bombs", 5);
-			if(i>9){
-				_console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*7, itoa(i, buffer, 10), 2);
-			}else{
-				_console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*7, " ", 1);
-				_console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*8, itoa(i, buffer, 10), 1);
-			}
-			if(seconds>999) seconds = 999;
-			if(seconds>99) i=3; else if(seconds>9) i=2; else i=1;
-			if(i < 3) _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*22, "  ", 3-i);
-			_console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*(25-i), utoa(seconds, buffer, 10), i);
-			
-			
+            if(i>9){
+                _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*7, itoa(i, buffer, 10), 2);
+            }else{
+                _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*7, " ", 1);
+                _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*8, itoa(i, buffer, 10), 1);
+            }
+            if(seconds>999) seconds = 999;
+            if(seconds>99) i=3; else if(seconds>9) i=2; else i=1;
+            if(i < 3) _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*22, "  ", 3-i);
+            _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*(25-i), utoa(seconds, buffer, 10), i);
+
+
             if((revealedFields + game_level.numberBomb) == game_level.fields) gameOver = 1;
-			
+
         }
         // game end
         if(!newGame) {
             if((revealedFields + game_level.numberBomb) == game_level.fields) {
-				colors = 0x031c;
-				_console_clear((char*)((TOP+8+8*0)<<8), colors, 8);
-				_console_printchars(colors, (char*)((TOP+8+8*0)<<8)+6*3, "YOU are the winner!", 24);
+                colors = 0x031c;
+                _console_clear((char*)((TOP+8+8*0)<<8), colors, 8);
+                _console_printchars(colors, (char*)((TOP+8+8*0)<<8)+6*3, "YOU are the winner!", 24);
             }else{
-				colors = 0x0f03;
-				_console_clear((char*)((TOP+8+8*0)<<8), colors, 8);
-				_console_printchars(colors, (char*)((TOP+8+8*0)<<8)+6*2, ">>> You have lost <<<", 24);
+                colors = 0x0f03;
+                _console_clear((char*)((TOP+8+8*0)<<8), colors, 8);
+                _console_printchars(colors, (char*)((TOP+8+8*0)<<8)+6*2, ">>> You have lost <<<", 24);
             }
-			_console_clear((char*)((8+8*14)<<8), colors, 8);
+            _console_clear((char*)((8+8*14)<<8), colors, 8);
             _console_printchars(colors, (char*)((8+8*14)<<8)+6*1, "Hit any key for new game", 24);
 
-			while(serialRaw != 0xff) {}
-			while(serialRaw == 0xff) {}
+            while(serialRaw != 0xff) {}
+            while(serialRaw == 0xff) {}
         }
     }
 }
