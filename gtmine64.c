@@ -26,6 +26,7 @@
 // It is an alternative to a recursive function.
 // I am afraid of stack problems with recursive functions.
 #define MAXQ 40
+#define REPETITION 6
 
 #ifdef MEM32
 	#define MAXX 26 // max 26
@@ -66,10 +67,10 @@ const char s7[]={44,16,16,16,16,46,44,44,44,44,16,46,44,44,44,16,44,46,44,44,16,
 const char s8[]={44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,44,37,44,44,37,46,44,44,37,37,44,46,46,46,46,46,46,46,250};              // 8
 const char sbomb[]={16,44,16,44,16,46,44,61,16,16,44,46,16,16,16,16,16,46,44,16,16,16,44,46,16,44,16,44,16,46,46,46,46,46,46,46,250};           // 9
 const char sbombtriggered[]={16,19,16,19,16,19,19,62,16,16,19,19,16,16,16,16,16,19,19,16,16,16,19,19,16,19,16,19,16,19,19,19,19,19,19,19,250};  // 10 [0x0a]
-//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b]
-//const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,35,35,35,35,250};                             // 11 [0x0b]
-//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,0,0,35,35,250};                             // 11 [0x0b]
-const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,35,35,35,35,250};                         // 11 [0x0b]
+//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,0,0,35,35,250};                                 // 11 [0x0b] cursor open at 4 sides
+//const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,35,35,35,35,35,35,35,250};                             // 11 [0x0b] cursor right/left open
+//const char scursor[]={35,35,0,0,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,0,0,35,35,250};                             // 11 [0x0b] cursor top/bottom open
+const char scursor[]={35,35,35,35,35,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,0,0,0,0,35,35,35,35,35,35,35,250};                         // 11 [0x0b] cursor closed
 const char shidden[]={58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,58,58,58,58,58,50,50,50,50,50,50,50,250};         // 12 [0x0c]
 const char smarker[]={58,58,19,19,58,50,58,19,19,19,58,50,58,58,19,19,58,50,58,58,58,1,58,50,58,58,1,1,1,50,50,50,50,50,50,50,250};             // 13 [0x0d]
 
@@ -84,12 +85,13 @@ struct game_level_s {
     char numberBomb, topMargin;
 } game_level;
 
-
-char leftMargin;
+// register char leftMargin;
+__near char leftMargin;
 
 unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
 char field[MAXY][MAXX];      // byte array for playing field, lower nibble sprite id, upper nibble flags
 unsigned int colors;
+char bottonLevel;
 
 void setLevel(struct game_level_s *data, levels level){
     switch(level)
@@ -196,20 +198,24 @@ void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy 
 
 int main()
 {
-	unsigned int ticks;
-	unsigned int seconds;        // elapsed seconds
-	char cursorX, cursorY;       // cursor in the playing field
-	char markerCount;            // counter for marked fields
-	char revealedFields;         // counter for revealed fields
-	char queuePointer;           // pointer to queue
-	char gameOver;               // flag, end of game reached
-	char newGame;                // Flag, start new game without closing the old one
-	char firstClick;             // Flag for start of the clock
+	register char rep;
+	register unsigned int ticks;
+	register unsigned int seconds;        // elapsed seconds
+	register char cursorX, cursorY;       // cursor in the playing field
+	register char markerCount;            // counter for marked fields
+	register char revealedFields;         // counter for revealed fields
+	register char queuePointer;           // pointer to queue
+	register char gameOver;               // flag, end of game reached
+	register char newGame;                // Flag, start new game without closing the old one
+	register char firstClick;             // Flag for start of the clock
 	
-	int i, x, y, x1, y1, tx, ty; // help variables
-	char buffer[8];
+	register char i, x1, y1, tx, ty; // help variables
+	register int x, y; // help variables
+	__near char buffer[8];
+	//char c;
 
-    setLevel(&game_level, BEGINNER);
+	bottonLevel = BEGINNER;
+    setLevel(&game_level, bottonLevel);
 
     SYS_SetMode(2);
 
@@ -294,49 +300,23 @@ int main()
         mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8)+6*cursorX+leftMargin );
 
         while(!gameOver){
-
-            switch(buttonState) {
-            //switch(buttonRaw) {
-                case BUTTON_DOWN: // down
-                    if(cursorY < game_level.fieldsY-1){
-                        printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-                        cursorY++;
-                        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-                    }
-                    buttonState = 0xff;
-                break;
-                case BUTTON_UP: // up
-                    if(cursorY > 0){
-                        printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-                        cursorY--;
-                        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-                    }
-                    buttonState = 0xff;
-                break;
-                case BUTTON_LEFT: // left
-                    if(cursorX > 0){
-                        printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-                        cursorX--;
-                        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-                    }
-                    buttonState = 0xff;
-                break;
-                case BUTTON_RIGHT: // right
-                    // display for debugging
-                    if(cursorX < game_level.fieldsX-1){
-                        printSprite((field[cursorY][cursorX]), cursorX, cursorY);
-                        cursorX++;
-                        mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
-                    }
-                    buttonState = 0xff;
-                break;
-
-                // case BUTTON_START:  // blocked software reset
+		
+			//c = serialRaw;
+			
+			switch(serialRaw) {
+                case BUTTON_START:  // blocked software reset
+					bottonLevel++;
+					if(bottonLevel > EXPERT) bottonLevel = BEGINNER;
+                    gameOver = 1;
+                    newGame = 1;
+                    setLevel(&game_level, bottonLevel);
+					while(serialRaw != 0xff) {}
+				break;
                 case 'n': // start new game
                 case 'N':
                     gameOver = 1;
                     newGame = 1;
-                    buttonState = 0xff;
+					while(serialRaw != 0xff) {}
                 break;
 
                 case 'b': // new game beginner
@@ -344,14 +324,14 @@ int main()
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, BEGINNER);
-                    buttonState = 0xff;
+					while(serialRaw != 0xff) {}
                 break;
                 case 'a': // new game advanced
                 case 'A':
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, ADVANCED);
-                    buttonState = 0xff;
+					while(serialRaw != 0xff) {}
                 break;
 
                 case 'e': // new game expert
@@ -359,7 +339,7 @@ int main()
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, EXPERT);
-                    buttonState = 0xff;
+					while(serialRaw != 0xff) {}
                 break;
                 case BUTTON_B:
                 case 0x20: // set,unset marker with space
@@ -376,7 +356,7 @@ int main()
                         printSprite((field[cursorY][cursorX]), cursorX, cursorY);
                         mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8)+6*cursorX+leftMargin );
                     }
-                    buttonState = 0xff;
+					while(serialRaw != 0xff) {}
                 break;
 
                 case BUTTON_A:
@@ -441,14 +421,55 @@ int main()
                         }
                         mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8)+6*cursorX+leftMargin);
                     }
-                    buttonState = 0xff;
                 break;
+				default:
+					rep = 0;
+					if(serialRaw > 0xef) { // it is a controller key
+					
+						if( ((serialRaw ^ BUTTON_DOWN) && (BUTTON_DOWN ^ 0xff)) == 0 ){ // down
+							if(cursorY < game_level.fieldsY-1){
+								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+								cursorY++;
+								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
+								rep = REPETITION;
+							}
+						}
+						if( ((serialRaw ^ BUTTON_UP) && (BUTTON_UP ^ 0xff)) == 0 ){ // up
+							if(cursorY > 0){
+								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+								cursorY--;
+								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
+								rep = REPETITION;
+							}
+						}
+						if( ((serialRaw ^ BUTTON_LEFT) && (BUTTON_LEFT ^ 0xff)) == 0 ){ // left
+							if(cursorX > 0){
+								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+								cursorX--;
+								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
+								rep = REPETITION;
+							}
+						}
+						if( ((serialRaw ^ BUTTON_RIGHT) && (BUTTON_RIGHT ^ 0xff) ) == 0 ){ // right
+							if(cursorX < game_level.fieldsX-1){
+								printSprite((field[cursorY][cursorX]), cursorX, cursorY);
+								cursorX++;
+								mySpritet((char*)scursor, (char*)(cursorY*6+game_level.topMargin<<8) + 6 * cursorX + leftMargin);
+								rep = REPETITION;
+							}
+						}
+					
+						while((serialRaw != 0xff) && (rep > 0)) {
+							_wait(2);
+							rep--;
+						}
+					}
+
             }
 
             // output of status line
-			seconds = (_clock() - ticks) / 60;
+			if(seconds<999) seconds = (_clock() - ticks) / 60; else seconds = 999;
             if(!firstClick) seconds = 0;
-            if(seconds>999) seconds = 999;
             i = game_level.numberBomb - markerCount;
             _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*1, "Bombs", 5);
 			if(i>9){
@@ -480,7 +501,8 @@ int main()
 			_console_clear((char*)((8+8*14)<<8), colors, 8);
             _console_printchars(colors, (char*)((8+8*14)<<8)+6*1, "Hit any key for new game", 24);
 
-            while(buttonState == 0xff) {}
+			while(serialRaw != 0xff) {}
+			while(serialRaw == 0xff) {}
         }
     }
 }
