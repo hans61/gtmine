@@ -326,15 +326,46 @@ void initialize()
 }
 
 
+int getInput(void)
+{
+    static char lastff = 0;
+    int c, b;
+
+    if (! (b = buttonState ^ 0xff)) {
+        lastff = 1;
+    } else {
+        c = serialRaw;
+        if (lastff) {           /* clean press */
+            lastff = 0;
+            if (b == 0x10)      /* - report buttonStart like a key */
+                return 0xef;
+            if (c < 127) {      /* - looks like a key */
+                if ((c+1) & c)  /* - also report type b codes as buttons */
+                    buttonState = 0xff;
+                return c;
+            }
+        }
+        lastff = 0;             /* buttons: */
+        b &= 0xef;              /* - ignore buttonStart */
+        b = (-b) & b;           /* - pick one button only */
+        if (b) {
+            buttonState |= b;   /* - mark button as processed */
+            return b ^ 0xff;    /* - return */
+        }
+    }
+    return -1;
+}
+
+
 int main()
 {
-    char rep;
     char cursorX, cursorY;       // cursor in the playing field
 
     char i, x1, y1, tx, ty; // help variables
     int x, y; // help variables
     char buffer[8];
 
+    bottonLevel = BEGINNER;
     setLevel(&game_level, bottonLevel);
 
     SYS_SetMode(2);
@@ -346,7 +377,6 @@ int main()
         console_state.fgbg = 0x030a;
         videoTop_v5 = 224;
         seconds = 0;
-        bottonLevel = BEGINNER;
         markerCount = 0;
         gameOver = 0;
         newGame = 0;
@@ -382,22 +412,18 @@ int main()
 
         while(!gameOver){
 
-            //c = serialRaw;
-
-            switch(serialRaw) {
+            switch(getInput()) {
                 case BUTTON_START:  // blocked software reset
                     bottonLevel++;
                     if(bottonLevel > EXPERT) bottonLevel = BEGINNER;
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, bottonLevel);
-                    while(serialRaw != 0xff) {}
                 break;
                 case 'n': // start new game
                 case 'N':
                     gameOver = 1;
                     newGame = 1;
-                    while(serialRaw != 0xff) {}
                 break;
 
                 case 'b': // new game beginner
@@ -405,14 +431,12 @@ int main()
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, BEGINNER);
-                    while(serialRaw != 0xff) {}
                 break;
                 case 'a': // new game advanced
                 case 'A':
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, ADVANCED);
-                    while(serialRaw != 0xff) {}
                 break;
 
                 case 'e': // new game expert
@@ -420,7 +444,6 @@ int main()
                     gameOver = 1;
                     newGame = 1;
                     setLevel(&game_level, EXPERT);
-                    while(serialRaw != 0xff) {}
                 break;
                 case BUTTON_B:
                 case 0x20: // set,unset marker with space
@@ -438,7 +461,6 @@ int main()
                         printSprite((field[cursorY][cursorX]), cursorX, cursorY);
                         printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
                     }
-                    while(serialRaw != 0xff) {}
                 break;
 
                 case BUTTON_A:
@@ -505,49 +527,41 @@ int main()
                         printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
                     }
                 break;
-                default:
-                    rep = 0;
-                    if(serialRaw > 0xef) { // it is a controller key
 
-                        if( ((serialRaw ^ BUTTON_DOWN) && (BUTTON_DOWN ^ 0xff)) == 0 ){ // down
-                            if(cursorY < game_level.fieldsY-1){
-                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                cursorY++;
-                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                rep = REPETITION;
-                            }
-                        }
-                        if( ((serialRaw ^ BUTTON_UP) && (BUTTON_UP ^ 0xff)) == 0 ){ // up
-                            if(cursorY > 0){
-                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                cursorY--;
-                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                rep = REPETITION;
-                            }
-                        }
-                        if( ((serialRaw ^ BUTTON_LEFT) && (BUTTON_LEFT ^ 0xff)) == 0 ){ // left
-                            if(cursorX > 0){
-                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                cursorX--;
-                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                rep = REPETITION;
-                            }
-                        }
-                        if( ((serialRaw ^ BUTTON_RIGHT) && (BUTTON_RIGHT ^ 0xff) ) == 0 ){ // right
-                            if(cursorX < game_level.fieldsX-1){
-                                restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                cursorX++;
-                                printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
-                                rep = REPETITION;
-                            }
-                        }
+            case BUTTON_DOWN:
+                if(cursorY < game_level.fieldsY-1){
+                    restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                    cursorY++;
+                    printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                }
+                break;
 
-                        while((serialRaw != 0xff) && (rep > 0)) {
-                            _wait(2);
-                            rep--;
-                        }
-                    }
+            case BUTTON_UP:
+                if(cursorY > 0){
+                    restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                    cursorY--;
+                    printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                }
+                break;
+                
+            case BUTTON_LEFT:
+                if(cursorX > 0){
+                    restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                    cursorX--;
+                    printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                }
+                break;
 
+            case BUTTON_RIGHT:
+                if(cursorX < game_level.fieldsX-1){
+                    restoreCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                    cursorX++;
+                    printCursor((char*)bigcursor, (char*)(cursorY*6-1+game_level.topMargin<<8) + 6 * cursorX-1 + leftMargin);
+                }
+                break;
+
+            default:
+                break;
             }
 
             // output of status line
@@ -564,10 +578,7 @@ int main()
             if(seconds>99) i=3; else if(seconds>9) i=2; else i=1;
             if(i < 3) _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*22, "  ", 3-i);
             _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*(25-i), utoa(seconds, buffer, 10), i);
-
-
             if((revealedFields + game_level.numberBomb) == game_level.fields) gameOver = 1;
-
         }
         // game end
         if(!newGame) {
@@ -582,9 +593,8 @@ int main()
             }
             _console_clear((char*)((8+8*14)<<8), colors, 8);
             _console_printchars(colors, (char*)((8+8*14)<<8)+6*1, "Hit any key for new game", 24);
-
-            while(serialRaw != 0xff) {}
-            while(serialRaw == 0xff) {}
+            while (getInput() < 0)
+                { }
         }
     }
 }
