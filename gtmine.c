@@ -183,12 +183,20 @@ struct game_level_s {
 } game_level;
 
 __near char leftMargin;
+__near char markerCount;            // counter for marked fields
+__near char revealedFields;         // counter for revealed fields
+__near char queuePointer;           // pointer to queue
+__near char gameOver;               // flag, end of game reached
+__near char newGame;                // Flag, start new game without closing the old one
+__near char firstClick;             // Flag for start of the clock
+__near unsigned int colors;
+__near char bottonLevel;
+__near unsigned int ticks;
+__near unsigned int seconds;        // elapsed seconds
 
 unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
 char field[MAXY][MAXX];      // byte array for playing field, lower nibble sprite id, upper nibble flags
 char backup[64];
-unsigned int colors;
-char bottonLevel;
 
 void setLevel(struct game_level_s *data, levels level){
     switch(level)
@@ -273,92 +281,86 @@ void printSprite(int val, int xx, int yy)
     SYS_Sprite6(ptrChar, (char*)(yy*6+game_level.topMargin<<8)+6*xx+leftMargin);
 }
 
+void initialize()
+{
+    int i,x,y;
+
+    for( y=0; y<game_level.fieldsY; y++ )
+        for( x=0; x<game_level.fieldsX; x++ )
+            field[y][x] = BHIDDEN;
+    
+    i = 0; // bomb counter temp
+    // setting the bombs in the field
+    while(i < game_level.numberBomb){
+        x = rand() % (game_level.fieldsX-1);
+        y = rand() % (game_level.fieldsY-1);
+        if(field[y][x] != (SBOMB | BHIDDEN)){ // field is not a bomb, bomb set
+            i++;                              // add bomb
+            field[y][x] = SBOMB | BHIDDEN;    // set marker for bomb
+        }
+    }
+    
+    for( y=0; y<game_level.fieldsY; y++ ) {
+        char *fieldRow = field[y];
+        char *fieldRowAbove = (y > 0) ? field[y-1] : 0;
+        char *fieldRowBelow = (y < game_level.fieldsY-1) ? field[y+1] : 0;
+        for( x=0; x<game_level.fieldsX; x++ ){
+            // count neighboring bombs
+            if(field[y][x] != (SBOMB | BHIDDEN)) {
+                // observe edges
+                if(x < game_level.fieldsX-1 ){ // right edge
+                    if(fieldRow[x+1] == (SBOMB | BHIDDEN)) fieldRow[x]++;                       // right
+                    if(fieldRowBelow && fieldRowBelow[x+1] == (SBOMB | BHIDDEN)) fieldRow[x]++; // bottom right
+                    if(fieldRowAbove && fieldRowAbove[x+1] == (SBOMB | BHIDDEN)) fieldRow[x]++; // top right
+                }
+                if(x > 0 ){ // left edge
+                    if(fieldRow[x-1] == (SBOMB | BHIDDEN)) fieldRow[x]++;                       // right
+                    if(fieldRowBelow && fieldRowBelow[x-1] == (SBOMB | BHIDDEN)) fieldRow[x]++; // bottom right
+                    if(fieldRowAbove && fieldRowAbove[x-1] == (SBOMB | BHIDDEN)) fieldRow[x]++; // top right
+                }
+                if(fieldRowBelow && fieldRowBelow[x] == (SBOMB | BHIDDEN)) fieldRow[x]++; // bottom
+                if(fieldRowAbove && fieldRowAbove[x] == (SBOMB | BHIDDEN)) fieldRow[x]++; // top
+            }
+        }
+    }
+}
+
+
 int main()
 {
     char rep;
-    unsigned int ticks;
-    unsigned int seconds;        // elapsed seconds
     char cursorX, cursorY;       // cursor in the playing field
-    char markerCount;            // counter for marked fields
-    char revealedFields;         // counter for revealed fields
-    char queuePointer;           // pointer to queue
-    char gameOver;               // flag, end of game reached
-    char newGame;                // Flag, start new game without closing the old one
-    char firstClick;             // Flag for start of the clock
 
     char i, x1, y1, tx, ty; // help variables
     int x, y; // help variables
     char buffer[8];
-    //char c;
 
-    bottonLevel = BEGINNER;
     setLevel(&game_level, bottonLevel);
 
     SYS_SetMode(2);
 
     for(;;){
-        //SYS_SetMode(1975);        // faster calculation of the playing field
-        videoTop_v5 = 224;
-
-        leftMargin = (160 - 6*game_level.fieldsX)/2;
-
         _console_reset(0x3f38);
         _console_clear((char*)((8+8*14)<<8), 0x030a, 8);
         _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*0, "please wait, initialize...", 26);
-
         console_state.fgbg = 0x030a;
-
+        videoTop_v5 = 224;
+        seconds = 0;
+        bottonLevel = BEGINNER;
         markerCount = 0;
         gameOver = 0;
         newGame = 0;
         firstClick = 0;
-        seconds = 0;
         revealedFields = 0;
+        seconds = 0;
+        leftMargin = (160 - 6*game_level.fieldsX)/2;
 
-        for( y=0; y<game_level.fieldsY; y++ ){
-            for( x=0; x<game_level.fieldsX; x++ ){
-                // field[y][x] = SFREE;
-                field[y][x] = BHIDDEN;
+        initialize();
+
+        for( y=0; y<game_level.fieldsY; y++ )
+            for( x=0; x<game_level.fieldsX; x++ )
                 printSprite(field[y][x], x, y);
-            }
-        }
-
-        i = 0; // bomb counter temp
-        // setting the bombs in the field
-        while(i < game_level.numberBomb){
-            x = rand() % (game_level.fieldsX-1);
-            y = rand() % (game_level.fieldsY-1);
-            if(field[y][x] != (SBOMB | BHIDDEN)){ // field is not a bomb, bomb set
-                i++;                              // add bomb
-                field[y][x] = SBOMB | BHIDDEN;    // set marker for bomb
-            }
-        }
-
-        for( y=0; y<game_level.fieldsY; y++ ){
-            for( x=0; x<game_level.fieldsX; x++ ){
-
-                // count neighboring bombs
-                if(field[y][x] != (SBOMB | BHIDDEN)){
-                    // observe edges
-                    if(x < game_level.fieldsX-1 ){ // right edge
-                        if(field[y][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // right
-                        if(y < game_level.fieldsY-1 ) if(field[y+1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom right
-                        if(y > 0 ) if(field[y-1][x+1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top right
-                    }
-                    if(x > 0 ){ // left edge
-                        if(field[y][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;                      // left
-                        if(y < game_level.fieldsY-1 ) if(field[y+1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++; // bottom left
-                        if(y > 0 ) if(field[y-1][x-1] == (SBOMB | BHIDDEN)) field[y][x]++;         // top left
-                    }
-                    if(y < game_level.fieldsY-1 ){
-                        if(field[y+1][x] == (SBOMB | BHIDDEN)) field[y][x]++;                      // bottom
-                    }
-                    if(y > 0 ) if(field[y-1][x] == (SBOMB | BHIDDEN)) field[y][x]++;               // top
-                }
-
-            }
-        }
-
+        
         // output info line
         _console_clear((char*)((8+8*14)<<8), 0x030a, 8);
         _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*1, "B", 1);
@@ -370,8 +372,9 @@ int main()
 
         _console_clear((char*)((TOP+8+8*0)<<8), 0x030a, 8);
         _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*1, "Bombs", 5);
-        videoTop_v5 = 2 * TOP;
 
+        videoTop_v5 = 2 * TOP;
+        
         cursorX = 0;
         cursorY = 0;
 
