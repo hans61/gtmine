@@ -194,29 +194,29 @@ void setLevel(struct game_level_s *data, levels level){
     switch(level)
     {
         case ADVANCED:
-            (*data).fieldsX = 16;
-            (*data).fieldsY = 16;
-            (*data).fields = 256;
-            (*data).numberBomb = 40;
-            (*data).topMargin = 20;
+            data->fieldsX = 16;
+            data->fieldsY = 16;
+            data->fields = 256;
+            data->numberBomb = 40;
+            data->topMargin = 20;
         break;
         case EXPERT:
-            (*data).fieldsX = MAXX;               // 26
-            (*data).fieldsY = MAXY;               // 17
-            (*data).fields = MAXX * MAXY;         // 442
-            (*data).numberBomb = MAXX * MAXY / 5; // 88
+            data->fieldsX = MAXX;               // 26
+            data->fieldsY = MAXY;               // 17
+            data->fields = MAXX * MAXY;         // 442
+            data->numberBomb = MAXX * MAXY / 5; // 88
 #ifdef MEM32
-            (*data).topMargin = 18;               // 1*8 (one lines text) + 2 + 8 = 18 (pixel + 8)
+            data->topMargin = 18;               // 1*8 (one lines text) + 2 + 8 = 18 (pixel + 8)
 #else
-            (*data).topMargin = 17;               // 1*8 (one lines text) + 1 + 8 = 17 (pixel + 8)
+            data->topMargin = 17;               // 1*8 (one lines text) + 1 + 8 = 17 (pixel + 8)
 #endif
         break;
         default: // BEGINNER
-            (*data).fieldsX = 9;
-            (*data).fieldsY = 9;
-            (*data).fields = 81;
-            (*data).numberBomb = 10;
-            (*data).topMargin = 27;
+            data->fieldsX = 9;
+            data->fieldsY = 9;
+            data->fields = 81;
+            data->numberBomb = 10;
+            data->topMargin = 27;
         break;
     }
 
@@ -253,74 +253,42 @@ void restoreCursor(char *addr, char *dest){ //
     }
 }
 
-void printSprite(int val, int xx, int yy) // val is the id of the sprite, xx,yy is the x,y position in the playfield
+void printSprite(int val, int xx, int yy)
+// val is the id of the sprite, xx,yy is the x,y position in the playfield
 {
-    char* ptrChar;
+    static const char* ptrChars[] = {
+        sfree, s1, s2, s3, s4, s5, s6, s7, s8,
+        sbomb, sbombtriggered, sfree, shidden, smarker };
+    const char* ptrChar;
     int sprnum;
+    
     sprnum = val & 0x0f;
-    if(val >= BHIDDEN) sprnum = SHIDDEN;
-    if(val >= BMARKER) sprnum = SMARKER;
-    ptrChar = (char*)sfree;
-    switch(sprnum){
-        case SFREE:
-            ptrChar = (char*)sfree;
-            break;
-        case S1:
-            ptrChar = (char*)s1;
-            break;
-        case S2:
-            ptrChar = (char*)s2;
-            break;
-        case S3:
-            ptrChar = (char*)s3;
-            break;
-        case S4:
-            ptrChar = (char*)s4;
-            break;
-        case S5:
-            ptrChar = (char*)s5;
-            break;
-        case S6:
-            ptrChar = (char*)s6;
-            break;
-        case S7:
-            ptrChar = (char*)s7;
-            break;
-        case S8:
-            ptrChar = (char*)s8;
-            break;
-        case SBOMB:
-            ptrChar = (char*)sbomb;
-            break;
-        case SBOMBTRIGGERED:
-            ptrChar = (char*)sbombtriggered;
-            break;
-        case SHIDDEN:
-            ptrChar = (char*)shidden;
-            break;
-        case SMARKER:
-            ptrChar = (char*)smarker;
-            break;
-    }
+    if(val >= BHIDDEN)
+        sprnum = SHIDDEN;
+    if(val >= BMARKER)
+        sprnum = SMARKER;
+    ptrChar = sfree;
+    if (sprnum >= 0 && sprnum <= SMARKER) 
+        ptrChar = ptrChars[sprnum];
     SYS_Sprite6(ptrChar, (char*)(yy*6+game_level.topMargin<<8)+6*xx+leftMargin);
 }
 
 int main()
 {
-    register char rep;
-    register unsigned int ticks;
-    register unsigned int seconds;        // elapsed seconds
-    register char cursorX, cursorY;       // cursor in the playing field
-    register char markerCount;            // counter for marked fields
-    register char revealedFields;         // counter for revealed fields
-    register char queuePointer;           // pointer to queue
-    register char gameOver;               // flag, end of game reached
-    register char newGame;                // Flag, start new game without closing the old one
-    register char firstClick;             // Flag for start of the clock
+    char rep;
+    unsigned int ticks;
+    unsigned int seconds;        // elapsed seconds
+    char cursorX, cursorY;       // cursor in the playing field
+    char markerCount;            // counter for marked fields
+    char revealedFields;         // counter for revealed fields
+    char queuePointer;           // pointer to queue
+    char gameOver;               // flag, end of game reached
+    char newGame;                // Flag, start new game without closing the old one
+    char firstClick;             // Flag for start of the clock
 
-    register char i, x1, y1, tx, ty; // help variables
-    register int x, y; // help variables
-    __near char buffer[8];
+    char i, x1, y1, tx, ty; // help variables
+    int x, y; // help variables
+    char buffer[8];
     //char c;
 
     bottonLevel = BEGINNER;
@@ -617,3 +585,9 @@ int main()
         }
     }
 }
+
+/* Local Variables: */
+/* mode: c */
+/* c-basic-offset: 4 */
+/* indent-tabs-mode: () */
+/* End: */
