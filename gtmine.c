@@ -292,8 +292,8 @@ void initialize()
     i = 0; // bomb counter temp
     // setting the bombs in the field
     while(i < game_level.numberBomb){
-        x = rand() % (game_level.fieldsX-1);
-        y = rand() % (game_level.fieldsY-1);
+        x = rand() % (game_level.fieldsX);
+        y = rand() % (game_level.fieldsY);
         if(field[y][x] != (SBOMB | BHIDDEN)){ // field is not a bomb, bomb set
             i++;                              // add bomb
             field[y][x] = SBOMB | BHIDDEN;    // set marker for bomb
