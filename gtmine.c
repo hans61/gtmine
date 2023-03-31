@@ -5,7 +5,9 @@
 #include <gigatron/libc.h>
 #include <stdarg.h>
 
-#define MEM32      // MEM32|MEM64 for 32k or 64k version
+#ifndef MEM32
+# define MEM32 0 // set to 1 for 64 bits
+#endif
 
 // Game controller bits (actual controllers in kit have negative output)
 // +----------------------------------------+
