@@ -329,7 +329,7 @@ void initialize()
 int getInput(void)
 {
     static char lastff = 0;
-    int c, b;
+    register int c, b;
 
     if (! (b = buttonState ^ 0xff)) {
         lastff = 1;
@@ -352,6 +352,26 @@ int getInput(void)
             buttonState |= b;   /* - mark button as processed */
             return b ^ 0xff;    /* - return */
         }
+    }
+    return -1;
+}
+
+
+int getInputAuto(void)
+{
+    static char fc = 0;
+    static int last = -1;
+    register int c;
+
+    if ((c = getInput()) >= 0) {
+        fc = frameCount + 16;
+        return (last = c);
+    }
+    if (serialRaw == 0xff)
+        return (last = -1);
+    if (last >= 0 && (signed char)(frameCount - fc) >= 0) {
+        fc = frameCount + 8;
+        return last;
     }
     return -1;
 }
@@ -412,7 +432,7 @@ int main()
 
         while(!gameOver){
 
-            switch(getInput()) {
+            switch(getInputAuto()) {
                 case BUTTON_START:  // blocked software reset
                     bottonLevel++;
                     if(bottonLevel > EXPERT) bottonLevel = BEGINNER;
