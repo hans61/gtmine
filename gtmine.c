@@ -198,36 +198,19 @@ unsigned int queue[MAXQ];    // queue for automatic uncovering of game fields
 char field[MAXY][MAXX];      // byte array for playing field, lower nibble sprite id, upper nibble flags
 char backup[64];
 
-void setLevel(struct game_level_s *data, levels level){
-    switch(level)
-    {
-        case ADVANCED:
-            data->fieldsX = 16;
-            data->fieldsY = 16;
-            data->fields = 256;
-            data->numberBomb = 40;
-            data->topMargin = 20;
-        break;
-        case EXPERT:
-            data->fieldsX = MAXX;               // 26
-            data->fieldsY = MAXY;               // 17
-            data->fields = MAXX * MAXY;         // 442
-            data->numberBomb = MAXX * MAXY / 5; // 88
-#ifdef MEM32
-            data->topMargin = 18;               // 1*8 (one lines text) + 2 + 8 = 18 (pixel + 8)
-#else
-            data->topMargin = 17;               // 1*8 (one lines text) + 1 + 8 = 17 (pixel + 8)
-#endif
-        break;
-        default: // BEGINNER
-            data->fieldsX = 9;
-            data->fieldsY = 9;
-            data->fields = 81;
-            data->numberBomb = 10;
-            data->topMargin = 27;
-        break;
-    }
+void setLevel(struct game_level_s *data, levels level)
+{
+    static struct game_level_s
+        advanced = { 16, 16, 256, 40, 20 },
+        expert = { MAXX, MAXY, MAXX*MAXY, MAXX*MAXY/5, 17+(MEM32?1:0) },
+        beginner = { 9, 9, 81, 10, 27};
 
+    struct game_level_s *lvl = &beginner;
+    if (level == ADVANCED)
+        lvl = &advanced;
+    else if (level == EXPERT)
+        lvl = &expert;
+    *data = *lvl;
 }
 
 void printCursor(char *addr, char *dest){ //
@@ -328,50 +311,36 @@ void initialize()
 
 int getInput(void)
 {
-    static char lastff = 0;
+    static __near char fc;
+    static __near char last = 0xff;
     register int c, b;
 
-    if (! (b = buttonState ^ 0xff)) {
-        lastff = 1;
-    } else {
+    if ((b = buttonState ^ 0xff)) {
         c = serialRaw;
-        if (lastff) {           /* clean press */
-            lastff = 0;
-            if (b == 0x10)      /* - report buttonStart like a key */
-                return 0xef;
-            if (c < 127) {      /* - looks like a key */
-                if ((c+1) & c)  /* - also report type b codes as buttons */
+        fc = frameCount + 16;
+        if (last == 0xff) {           /* clean press */
+            if (b == 0x10)            /* - report buttonStart like a key */
+                return last = 0xef;
+            if (c < 127) {            /* - looks like a key */
+                if ((c+1) & c)        /* - also report type b codes as buttons */
                     buttonState = 0xff;
-                return c;
+                return last = c;
             }
         }
-        lastff = 0;             /* buttons: */
-        b &= 0xef;              /* - ignore buttonStart */
-        b = (-b) & b;           /* - pick one button only */
+        b &= 0xef;                   /* - ignore buttonStart */
+        b = (-b) & b;                /* - pick one button only */
         if (b) {
-            buttonState |= b;   /* - mark button as processed */
-            return b ^ 0xff;    /* - return */
+            buttonState |= b;        /* - mark button as processed */
+            return last = b ^ 0xff;  /* - return */
         }
     }
-    return -1;
-}
-
-
-int getInputAuto(void)
-{
-    static char fc = 0;
-    static int last = -1;
-    register int c;
-
-    if ((c = getInput()) >= 0) {
-        fc = frameCount + 16;
-        return (last = c);
+    if (serialRaw == 0xff) {         /* nothing pressed. */
+        last = 0xff;                 /* - next is a clean press */
+        return -1;
     }
-    if (serialRaw == 0xff)
-        return (last = -1);
-    if (last >= 0 && (signed char)(frameCount - fc) >= 0) {
+    if (last != 0xff && (signed char)(frameCount - fc) >= 0) {
         fc = frameCount + 8;
-        return last;
+        return last;                 /* autorepeat */
     }
     return -1;
 }
@@ -432,7 +401,7 @@ int main()
 
         while(!gameOver){
 
-            switch(getInputAuto()) {
+            switch(getInput()) {
                 case BUTTON_START:  // blocked software reset
                     bottonLevel++;
                     if(bottonLevel > EXPERT) bottonLevel = BEGINNER;
