@@ -169,8 +169,7 @@ __nohop const char bigcursor[]={
 	35, 0, 0, 0, 0, 0, 0,35,
 	35, 0, 0, 0, 0, 0, 0,35,
 	35, 0, 0, 0, 0, 0, 0,35,
-	35,35,35,35,35,35,35,35,250};                                                                                           // 11 [0x0b] cursor closed
-
+	35,35,35,35,35,35,35,35,250};
 
 typedef enum {
     BEGINNER, ADVANCED, EXPERT
@@ -184,7 +183,7 @@ struct game_level_s {
 
 __near char leftMargin;
 __near char markerCount;            // counter for marked fields
-__near char revealedFields;         // counter for revealed fields
+__near int  revealedFields;         // counter for revealed fields
 __near char queuePointer;           // pointer to queue
 __near char gameOver;               // flag, end of game reached
 __near char newGame;                // Flag, start new game without closing the old one
