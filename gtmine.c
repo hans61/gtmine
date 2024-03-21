@@ -30,7 +30,7 @@
 #define MAXQ 40
 #define REPETITION 6 // speed for automatic cursor movement
 
-#ifdef MEM32
+#if MEM32
     #define MAXX 26 // max 26
     #define MAXY 17 // max 17
     #define TOP 2
@@ -344,6 +344,28 @@ int getInput(void)
     return -1;
 }
 
+#define ADDR0(cx)    (char*)(((8+TOP)<<8)+cx*6)  // screen address for top line
+#define ADDR(cy,cx)  (char*)(((8+cy*8)<<8)+cx*6) // screen address for line cy
+
+void cprint(char *addr, const char *s)
+{
+    _console_printchars(0x200a, addr, s, -1);
+}
+
+void cprintr(char *addr, const char *s)
+{
+    _console_printchars(0x30a, addr, s, 1);
+    _console_printchars(0x200a, addr+6, s+1, -1);
+}
+
+void cprintu(register char *addr, register unsigned int x)
+{
+    char buffer[8];
+    register char *s = utoa(x, buffer, 10);
+    while (s > buffer+sizeof(buffer)-4)
+        *--s = ' ';
+    _console_printchars(0x20a, addr, s, 8);
+}
 
 int main()
 {
@@ -351,7 +373,6 @@ int main()
 
     char i, x1, y1, tx, ty; // help variables
     int x, y; // help variables
-    char buffer[8];
 
     bottonLevel = BEGINNER;
     setLevel(&game_level, bottonLevel);
@@ -359,10 +380,7 @@ int main()
     SYS_SetMode(2);
 
     for(;;){
-        _console_reset(0x3f38);
-        _console_clear((char*)((8+8*14)<<8), 0x030a, 8);
-        _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*0, "please wait, initialize...", 26);
-        console_state.fgbg = 0x030a;
+        _console_clear(ADDR0(0), 0x3f38, 120-8-TOP);
         videoTop_v5 = 224;
         seconds = 0;
         markerCount = 0;
@@ -380,16 +398,12 @@ int main()
                 printSprite(field[y][x], x, y);
         
         // output info line
-        _console_clear((char*)((8+8*14)<<8), 0x030a, 8);
-        _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*1, "B", 1);
-        _console_printchars(0x200a, (char*)((8+8*14)<<8)+6*2, "eginner", 7);
-        _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*10, "A", 1);
-        _console_printchars(0x200a, (char*)((8+8*14)<<8)+6*11, "dvanced", 7);
-        _console_printchars(0x030a, (char*)((8+8*14)<<8)+6*19, "E", 1);
-        _console_printchars(0x200a, (char*)((8+8*14)<<8)+6*20, "xpert", 5);
-
-        _console_clear((char*)((TOP+8+8*0)<<8), 0x030a, 8);
-        _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*1, "Bombs", 5);
+        _console_clear(ADDR(14,0), 0x030a, 8);
+        cprintr(ADDR(14,1),"Beginner");
+        cprintr(ADDR(14,10),"Advanced");
+        cprintr(ADDR(14,19),"Expert");
+        _console_clear(ADDR0(0), 0x030a, 8);
+        cprint(ADDR0(1), "Bombs");
 
         videoTop_v5 = 2 * TOP;
         
@@ -556,31 +570,25 @@ int main()
             if(seconds<999) seconds = (_clock() - ticks) / 60; else seconds = 999;
             if(!firstClick) seconds = 0;
             i = game_level.numberBomb - markerCount;
-            if(i>9){
-                _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*7, itoa(i, buffer, 10), 2);
-            }else{
-                _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*7, " ", 1);
-                _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*8, itoa(i, buffer, 10), 1);
-            }
-            if(seconds>999) seconds = 999;
-            if(seconds>99) i=3; else if(seconds>9) i=2; else i=1;
-            if(i < 3) _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*22, "  ", 3-i);
-            _console_printchars(0x020a, (char*)((TOP+8+8*0)<<8)+6*(25-i), utoa(seconds, buffer, 10), i);
+            cprintu(ADDR0(6), i);
+            if(seconds>999)
+                seconds = 999;
+            cprintu(ADDR0(22), seconds);
             if((revealedFields + game_level.numberBomb) == game_level.fields) gameOver = 1;
         }
         // game end
         if(!newGame) {
             if((revealedFields + game_level.numberBomb) == game_level.fields) {
                 colors = 0x031c;
-                _console_clear((char*)((TOP+8+8*0)<<8), colors, 8);
-                _console_printchars(colors, (char*)((TOP+8+8*0)<<8)+6*3, "YOU are the winner!", 24);
+                _console_clear(ADDR0(0), colors, 8);
+                _console_printchars(colors, ADDR0(3), "YOU are the winner!", 255);
             }else{
                 colors = 0x0f03;
-                _console_clear((char*)((TOP+8+8*0)<<8), colors, 8);
-                _console_printchars(colors, (char*)((TOP+8+8*0)<<8)+6*2, ">>> You have lost <<<", 24);
+                _console_clear(ADDR0(0), colors, 8);
+                _console_printchars(colors, ADDR0(2), ">>> You have lost <<<", 255);
             }
-            _console_clear((char*)((8+8*14)<<8), colors, 8);
-            _console_printchars(colors, (char*)((8+8*14)<<8)+6*1, "Hit any key for new game", 24);
+            _console_clear(ADDR(14,0), colors, 8);
+            _console_printchars(colors, ADDR(14,1), "Hit any key for new game", 255);
             while (getInput() < 0)
                 { }
         }
