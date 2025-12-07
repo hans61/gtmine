@@ -9,6 +9,7 @@
 # define MEM32 0 // set to 1 for 64 bits
 #endif
 
+
 // Game controller bits (actual controllers in kit have negative output)
 // +----------------------------------------+
 // |       Up                        B*     |
@@ -39,6 +40,14 @@
     #define MAXY 17 // max 17
     #define TOP 0
 #endif
+
+#if MEM32
+#pragma glcc segment(8<<8,(8+TOP)<<8,"CDH")
+#pragma glcc segment(0x7fa0,0x8000,"")
+#pragma glcc initsp(0x8000)
+#endif
+
+
 
 #define SFREE 0
 #define S1 1
@@ -406,7 +415,7 @@ int main()
         cprint(ADDR0(1), "Bombs");
 
         videoTop_v5 = 2 * TOP;
-        
+
         cursorX = 0;
         cursorY = 0;
 
