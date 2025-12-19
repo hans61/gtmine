@@ -42,9 +42,7 @@
 #endif
 
 #if MEM32
-#pragma glcc segment(8<<8,(8+TOP)<<8,"CDH")
-#pragma glcc segment(0x7fa0,0x8000,"")
-#pragma glcc initsp(0x8000)
+    #pragma glcc segment(8<<8,(8+TOP)<<8,"D")
 #endif
 
 
